@@ -1,0 +1,22 @@
+@import "tailwindcss";
+@config "../tailwind.config.js";
+
+body {
+  background-color: #fafaf8;
+  overflow-x: hidden;
+}
+
+/* Optional: Custom scrollbar to match the aesthetic */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #fafaf8; 
+}
+::-webkit-scrollbar-thumb {
+  background: #d4d4d8; 
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #a1a1aa; 
+}

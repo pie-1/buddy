@@ -26,7 +26,7 @@ export default function LandingPage() {
       <div className="relative pt-20">
         <Hero />
 
-        {/* Overlay Flanking Texts */}
+        {/* Overlay Flanking Texts (z-40 so it sits above the Hero) */}
         <div className="absolute inset-0 z-40 pointer-events-none flex items-center justify-between px-12 md:px-24 max-w-[1500px] mx-auto w-full pt-10">
           
           <div className="hidden md:flex flex-col items-start gap-20 pointer-events-auto">

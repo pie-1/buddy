@@ -13,6 +13,7 @@
     "@tailwindcss/vite": "^4.3.3",
     "autoprefixer": "^10.6.2",
     "clsx": "^2.1.1",
+    "d3-contour": "^4.0.3",
     "framer-motion": "^14.9.0",
     "lucide-react": "^1.66.0",
     "postcss": "^8.5.32",

@@ -1,165 +1,192 @@
+// client/src/components/ui/Hero.jsx
 import { useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { createTopoField } from "./topoField";
+import { blobOutline, outlinePath } from "./blob";
+import { HeroCard } from "./HeroCard";
 
-const SCAN_RADIUS = 140;
+const R = 150;
 
 export default function Hero() {
-  const canvasRef = useRef(null);
+  const containerRef = useRef(null);
+  const heroRef = useRef(null);
   const cardRef = useRef(null);
+  const passRef = useRef(null);
+  const canvasRef = useRef(null);
+  const fillRef = useRef(null);
+  const glowRef = useRef(null);
+  const glowSvgRef = useRef(null);
+  const auraRef = useRef(null);
 
-  // 1. Canvas Background renderer (Draws topo.svg natively, no CORS issues)
+  // Use 300vh so the scroll animation takes longer and is more visible
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "end start"]
+  });
+
+  // Shrink card to 40% and keep it fully visible
+  const cardScale = useTransform(scrollYProgress, [0, 0.4], [1, 0.4]);
+  const cardY = useTransform(scrollYProgress, [0, 0.4], [0, 0]); 
+  const cardOpacity = useTransform(scrollYProgress, [0, 0.4], [1, 1]);
+
+  // Fade out side text immediately
+  const textOpacity = useTransform(scrollYProgress, [0, 0.15], [1, 0]);
+  
+  // Giant text fades in and slides up
+  const titleOpacity = useTransform(scrollYProgress, [0.2, 0.5], [0, 1]);
+  const titleY = useTransform(scrollYProgress, [0.2, 0.5], [50, 0]);
+
   useEffect(() => {
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
-    const img = new Image();
-    img.src = "/topo.svg"; // Ensure topo.svg is in client/public/
-
-    const draw = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      // Draw the image scaled to cover the screen
-      ctx.globalAlpha = 0.3; // Opacity of the map
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    };
-
-    img.onload = draw;
-    window.addEventListener("resize", draw);
-    return () => window.removeEventListener("resize", draw);
-  }, []);
-
-  // 2. Mouse tracking (Lerp for smoothness)
-  useEffect(() => {
+    const hero = heroRef.current;
     const card = cardRef.current;
-    const target = { x: -1000, y: -1000 };
-    const pos = { x: -1000, y: -1000 };
+    const pass = passRef.current;
+    const fill = fillRef.current;
+    const glow = glowRef.current;
+    const glowSvg = glowSvgRef.current;
+    const auraPath = auraRef.current;
+    const field = createTopoField(canvasRef.current);
+    
+    const m = { x: innerWidth / 2, y: innerHeight / 2 }; 
+    const lens = { ...m }; 
+    const aura = { ...m }; 
+    const vel = { x: 0, y: 0 }; 
+    const dir = { x: 1, y: 0 }; 
+    const par = { x: 0, y: 0 }; 
+    let on = 0; 
+    let onV = 0;
+    let want = 0;
+    let last = performance.now();
     let raf;
-    let started = false;
 
     const onMove = (e) => {
-      if (!started) {
-        pos.x = e.clientX;
-        pos.y = e.clientY;
-        started = true;
+      m.x = e.clientX;
+      m.y = e.clientY;
+      if (!want) {
+        lens.x = aura.x = m.x; 
+        lens.y = aura.y = m.y;
       }
-      target.x = e.clientX;
-      target.y = e.clientY;
+      want = 1;
     };
+    const onLeave = () => (want = 0);
 
-    const tick = () => {
-      pos.x += (target.x - pos.x) * 0.15;
-      pos.y += (target.y - pos.y) * 0.15;
+    const tick = (ts) => {
+      const dt = Math.min(0.05, (ts - last) / 1000);
+      last = ts;
+      const t = ts / 1000;
 
-      if (card) {
-        const c = card.getBoundingClientRect();
-        // Update the CSS variable used by the clip-path
-        card.style.setProperty("--cx", `${pos.x - c.left}px`);
-        card.style.setProperty("--cy", `${pos.y - c.top}px`);
+      const px = lens.x;
+      const py = lens.y;
+      lens.x += (m.x - lens.x) * 0.2;
+      lens.y += (m.y - lens.y) * 0.2;
+      aura.x += (m.x - aura.x) * 0.09;
+      aura.y += (m.y - aura.y) * 0.09;
+      par.x += (m.x / innerWidth - 0.5 - par.x) * 0.05;
+      par.y += (m.y / innerHeight - 0.5 - par.y) * 0.05;
+
+      vel.x += (lens.x - px - vel.x) * 0.2;
+      vel.y += (lens.y - py - vel.y) * 0.2;
+      const speed = Math.hypot(vel.x, vel.y);
+      if (speed > 0.05) {
+        dir.x = vel.x / speed;
+        dir.y = vel.y / speed;
+      }
+      const stretch = Math.min(0.3, speed * 0.018); 
+
+      onV = (onV + (want - on) * 0.16) * 0.78;
+      on = Math.max(0, on + onV);
+
+      const h = hero.getBoundingClientRect();
+      const c = card.getBoundingClientRect();
+
+      if (on > 0.01 && c.top < innerHeight) {
+        const r = R * on;
+        const body = blobOutline(r, t, dir.x, dir.y, stretch, 0);
+        const trail = blobOutline(r * 1.45, t, dir.x, dir.y, stretch * 1.4, 1.7);
+        const o = Math.min(1, on);
+        
+        fill.setAttribute("d", outlinePath(body, lens.x - h.left, lens.y - h.top)); 
+        pass.style.clipPath = `path("${outlinePath(body, lens.x - c.left, lens.y - c.top)}")`; 
+        glow.setAttribute("d", outlinePath(body, lens.x - h.left, lens.y - h.top)); 
+        glowSvg.style.opacity = o;
+        auraPath.setAttribute("d", outlinePath(trail, aura.x - h.left, aura.y - h.top)); 
+        auraPath.style.opacity = o;
+      } else {
+        fill.setAttribute("d", "");
+        auraPath.setAttribute("d", "");
+        pass.style.clipPath = "circle(0px at 0 0)";
+        glowSvg.style.opacity = 0;
       }
 
+      field.draw({ t: t, dt, x: lens.x - h.left, y: lens.y - h.top, speed, on, mx: par.x, my: par.y });
       raf = requestAnimationFrame(tick);
     };
 
     window.addEventListener("mousemove", onMove);
+    document.documentElement.addEventListener("mouseleave", onLeave);
     raf = requestAnimationFrame(tick);
     return () => {
       window.removeEventListener("mousemove", onMove);
+      document.documentElement.removeEventListener("mouseleave", onLeave);
       cancelAnimationFrame(raf);
+      field.destroy();
     };
   }, []);
 
   return (
-    <section className="relative w-full h-screen overflow-hidden flex items-center justify-center bg-[#fafaf8]">
-      
-      {/* 1. STATIC BACKGROUND CANVAS */}
-      <canvas
-        ref={canvasRef}
-        className="absolute inset-0 z-0 pointer-events-none"
-      />
-
-      {/* 2. THE CARD */}
-      <motion.div
-        ref={cardRef}
-        className="relative w-[320px] h-[480px] z-20"
-        animate={{ y: [0, -8, 0] }}
-        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-      >
-        {/* Hint Pill */}
-        <div className="absolute -top-28 left-1/2 -translate-x-1/2 z-30 whitespace-nowrap px-5 py-2.5 rounded-full bg-indigo-50/90 backdrop-blur-md border border-indigo-100 text-sm font-semibold text-indigo-600 flex items-center gap-2 shadow-sm">
-          <span className="text-lg leading-none">✨</span> Move your cursor to scan
+    <div ref={containerRef} className="relative w-full h-[300vh] bg-[#fafaf8]">
+      <div ref={heroRef} className="sticky top-0 w-full h-screen overflow-hidden flex flex-col items-center justify-center">
+        
+        <div className="absolute inset-0 z-0">
+          <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" style={{ maskImage: "radial-gradient(ellipse 85% 80% at 50% 50%, #000 40%, rgba(0,0,0,.5) 100%)" }} />
         </div>
 
-        {/* Hanging String */}
-        <div className="absolute bottom-full left-1/2 -translate-x-1/2 w-[2px] h-[70vh] bg-gradient-to-b from-transparent via-gray-300 to-gray-400" />
-        <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-30 w-5 h-6 rounded-md bg-gray-200 border border-gray-300 shadow-sm grid place-items-center">
-          <span className="w-2 h-2 rounded-full bg-gray-400" />
-        </div>
+        <svg className="absolute inset-0 w-full h-full z-10 pointer-events-none">
+          <defs>
+            <radialGradient id="cb-lens-fill"><stop offset="0" stopColor="#f6f2ff" /><stop offset="0.65" stopColor="#ebe3ff" /><stop offset="1" stopColor="#d9ccff" /></radialGradient>
+            <radialGradient id="cb-aura-fill"><stop offset="0" stopColor="rgb(139,92,246)" stopOpacity=".28" /><stop offset="0.6" stopColor="rgb(139,92,246)" stopOpacity=".2" /><stop offset="1" stopColor="rgb(139,92,246)" stopOpacity="0" /></radialGradient>
+          </defs>
+          <path ref={auraRef} fill="url(#cb-aura-fill)" />
+          <path ref={fillRef} fill="url(#cb-lens-fill)" stroke="rgba(124,92,255,.3)" strokeWidth="1.2" />
+        </svg>
 
-        {/* LAYER 1: Physical ID (Warm Beige) */}
-        <div className="absolute inset-0 bg-[#e8e4d9] rounded-2xl shadow-[0_30px_60px_-15px_rgba(0,0,0,0.2)] border border-[#d6d0c4] p-6 flex flex-col z-10">
-          <div className="text-center border-b border-[#d6d0c4] pb-3 mb-4">
-            <b className="text-xs tracking-widest text-gray-800">PURBANCHAL UNIVERSITY</b>
-            <small className="block text-[9px] text-gray-500 tracking-widest mt-1">ACME ENGINEERING COLLEGE</small>
-          </div>
+        <svg ref={glowSvgRef} className="absolute inset-0 w-full h-full z-30 pointer-events-none opacity-0">
+          <defs><path ref={glowRef} id="cb-lens-edge" fill="none" /></defs>
+          <use href="#cb-lens-edge" stroke="rgba(139,92,246,.07)" strokeWidth="46" strokeLinejoin="round" />
+          <use href="#cb-lens-edge" stroke="rgba(139,92,246,.11)" strokeWidth="28" strokeLinejoin="round" />
+          <use href="#cb-lens-edge" stroke="rgba(139,92,246,.22)" strokeWidth="12" strokeLinejoin="round" />
+        </svg>
 
-          <div className="w-20 h-24 bg-[#d6d0c4] rounded-lg mx-auto mb-4 border border-[#c4bdaf] flex items-center justify-center">
-            <svg className="w-8 h-8 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
-            </svg>
-          </div>
+        <HeroCard cardRef={cardRef} passRef={passRef} scale={cardScale} opacity={cardOpacity} y={cardY} />
 
-          <div className="flex flex-col gap-1">
-            <label className="text-[9px] text-gray-500 uppercase tracking-widest font-bold">Name</label>
-            <p className="text-base font-extrabold text-gray-900 leading-none mb-2">Pawan Singh</p>
-
-            <div className="flex justify-between">
-              <div>
-                <label className="text-[9px] text-gray-500 uppercase tracking-widest font-bold">Roll No.</label>
-                <p className="font-mono text-sm font-bold text-gray-800">079/BCT/042</p>
-              </div>
-              <div className="text-right">
-                <label className="text-[9px] text-gray-500 uppercase tracking-widest font-bold">Branch</label>
-                <p className="text-sm font-bold text-gray-800">B.E. Computer</p>
-              </div>
-            </div>
-
-            <label className="text-[9px] text-gray-500 uppercase tracking-widest font-bold mt-2">University Email</label>
-            <p className="font-mono text-sm font-bold text-gray-800">pawan.079@acme.edu.np</p>
-          </div>
-
-          <div className="mt-auto px-2 py-1.5 text-[10px] text-center text-red-700 bg-red-100 border border-red-200 border-dashed rounded-md font-bold">
-            ⚠ LIBRARY DUES PENDING: Rs. 150
-          </div>
-        </div>
-
-        {/* LAYER 2: Digital Pass (Clip-path Scanner) */}
-        <div
-          className="absolute inset-0 bg-gradient-to-br from-[#1e1b4b] to-[#09090b] rounded-2xl p-6 flex flex-col z-20 border border-indigo-500/60 shadow-[inset_0_0_60px_rgba(99,102,241,0.2)]"
-          style={{ 
-            clipPath: `circle(${SCAN_RADIUS}px at var(--cx, -999px) var(--cy, -999px))` 
-          }}
+        {/* Solid Dark Navy Text */}
+        <motion.div 
+          style={{ opacity: titleOpacity, y: titleY }}
+          className="absolute top-[65%] left-1/2 -translate-x-1/2 z-30 pointer-events-none"
         >
-          <small className="text-emerald-400 tracking-widest font-extrabold text-[10px]">● VERIFIED ACIT NODE</small>
+          <h1 className="text-6xl md:text-8xl lg:text-[130px] font-sans font-bold tracking-tighter text-[#1a1a2e] whitespace-nowrap">
+            connect.buy.belong
+          </h1>
+        </motion.div>
 
-          <div className="w-16 h-16 mt-6 mb-4 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-3xl shadow-lg shadow-indigo-500/30">
-            🎓
+        {/* Side Text */}
+        <motion.div 
+          style={{ opacity: textOpacity }}
+          className="absolute inset-0 z-40 pointer-events-none flex items-center justify-between px-12 md:px-24 max-w-[1500px] mx-auto w-full"
+        >
+          <div className="hidden md:flex flex-col items-start gap-20 pointer-events-auto">
+            <div className="text-[2.5rem] font-serif font-bold text-gray-900">Your Campus.</div>
+            <div className="text-[2.5rem] font-serif font-bold text-gray-900">Your Circle.</div>
+            <div className="text-[2.5rem] font-serif font-bold text-gray-900">Your CollegeBuddy.</div>
           </div>
-          <h3 className="text-2xl font-serif font-bold text-white leading-none mb-1">Pawan Singh</h3>
-          <p className="text-xs text-gray-400 mb-6">@pawan • ACME '27</p>
 
-          <div className="mt-auto flex flex-col gap-2">
-            <div className="bg-white/5 border border-white/10 rounded-xl p-3 backdrop-blur-md">
-              <b className="text-xl text-orange-400 mr-2">92</b>
-              <span className="text-xs text-gray-300">Campus Cred</span>
-            </div>
-            <div className="bg-white/5 border border-white/10 rounded-xl p-3 backdrop-blur-md text-xs text-gray-300 flex items-center gap-2">
-              <span>🛒</span> The Exchange — Rs. 4,500
-            </div>
-            <div className="bg-white/5 border border-white/10 rounded-xl p-3 backdrop-blur-md text-xs text-gray-300 flex items-center gap-2">
-              <span>📡</span> The Radar — Hackathon
-            </div>
+          <div className="hidden md:flex flex-col items-end gap-20 pointer-events-auto">
+            <div className="text-[2.5rem] font-serif font-bold text-gray-900">Connect</div>
+            <div className="text-[2.5rem] font-serif font-bold text-gray-900">Collaborate</div>
+            <div className="text-[2.5rem] font-serif font-bold text-gray-900">Create</div>
           </div>
-        </div>
-      </motion.div>
-    </section>
+        </motion.div>
+
+      </div>
+    </div>
   );
 }

@@ -1,35 +1,41 @@
 // client/src/App.jsx
-import { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { Loader } from './components/ui/Loader';
-import LandingPage from './pages/LandingPage'; 
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider, AuthContext } from "./context/AuthContext";
+import { useContext } from "react";
 
-// Placeholders for now
-const Dashboard = () => <div className="text-white p-10 font-serif text-4xl">Dashboard</div>;
-const Login = () => <div className="text-white p-10 font-serif text-4xl">Login</div>;
+import LandingPage from "./pages/LandingPage";
+import AuthPage from "./pages/AuthPage";
+import DocsPage from "./pages/DocsPage";
+import Dashboard from "./pages/Dashboard";
 
-export default function App() {
-  const [loading, setLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+// Protected Route Wrapper
+const ProtectedRoute = ({ children }) => {
+  const { user, loading } = useContext(AuthContext);
+  if (loading) return <div className="h-screen bg-[#09090b]" />;
+  if (!user) return <Navigate to="/auth" replace />;
+  return children;
+};
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      const token = localStorage.getItem('token');
-      if (token) setIsAuthenticated(true);
-      setTimeout(() => setLoading(false), 2000);
-    };
-    checkAuth();
-  }, []);
-
-  if (loading) return <Loader fullScreen />;
-
+function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/dashboard" element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />} />
-      </Routes>
-    </BrowserRouter>
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/docs" element={<DocsPage />} />
+          <Route path="/auth" element={<AuthPage />} />
+          <Route 
+            path="/dashboard" 
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            } 
+          />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
+
+export default App;

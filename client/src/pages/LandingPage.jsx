@@ -1,15 +1,21 @@
 // client/src/pages/LandingPage.jsx
 import { useRef } from "react";
 import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
+
+// Layout
 import { Navbar } from "../components/layout/Navbar";
-import Hero from "../components/ui/Hero";
-import { ProblemFlow } from "../components/ui/ProblemFlow";
-import { TrustFlow } from "../components/ui/TrustFlow";
-import FeaturesHorizontal from "../components/ui/FeaturesHorizontal";
-import SocialsSection from "../components/ui/SocialsSection";
-import Footer from "../components/ui/Footer";
-import { Reveal, MaskLine, EASE } from "../components/ui/Reveal";
-import { HangingNumber } from "../components/ui/HangingNumber";
+import Footer from "../components/layout/Footer";
+
+// Features
+import Hero from "../components/features/Hero/Hero";
+import { ProblemFlow } from "../components/features/Landing/ProblemFlow";
+import { TrustFlow } from "../components/features/Landing/TrustFlow";
+import FeaturesHorizontal from "../components/features/Landing/FeaturesHorizontal";
+import SocialsSection from "../components/features/Landing/SocialsSection";
+
+// Utils / Shared
+import { Reveal, MaskLine, EASE } from "../components/features/Landing/Reveal";
+import { HangingNumber } from "../components/features/Landing/HangingNumber";
 
 const WAVE = "M0,160L48,170.7C96,181,192,203,288,197.3C384,192,480,160,576,165.3C672,171,768,213,864,213.3C960,213,1056,171,1152,149.3C1248,128,1344,128,1392,128L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z";
 
@@ -33,7 +39,7 @@ export default function LandingPage() {
       {/* Section 1: Campus life is broken */}
       <section ref={darkRef} data-nav-theme="dark" className="relative z-20 bg-[#09090b] text-white pt-32">
         
-        {/* Top Wave - Pulls up over the Hero to hide the gap */}
+        {/* Top Wave */}
         <div className="absolute top-0 left-0 w-full overflow-hidden leading-[0] -translate-y-[99%] pointer-events-none">
           <svg className="w-full h-[100px] md:h-[150px] block" viewBox="0 0 1440 320" preserveAspectRatio="none">
             <path fill="#09090b" d={WAVE} />

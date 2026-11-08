@@ -1,23 +1,24 @@
 // client/src/components/layout/Navbar.jsx
-// Adapts to whatever is behind it: any section with data-nav-theme="dark" flips the bar to light-on-dark.
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { Link } from "react-router-dom";
+import { AuthContext } from "../../context/AuthContext";
 
-const LINKS = ["Marketplace", "Borrow", "Roommates", "Events"];
+const FEATURE_LINKS = ["Marketplace", "Borrow", "Roommates", "Events"];
 
 export function Navbar() {
   const [dark, setDark] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const { user, logout } = useContext(AuthContext);
 
   useEffect(() => {
     let raf = 0;
     const check = () => {
       raf = 0;
       setScrolled(window.scrollY > 24);
-      const probe = 36; // y of the bar's centre
+      const probe = 36;
       const isDark = [...document.querySelectorAll('[data-nav-theme="dark"]')].some((el) => {
         const r = el.getBoundingClientRect();
-        return r.top - 60 <= probe && r.bottom >= probe; // 60px lead-in covers the wave edge
+        return r.top - 60 <= probe && r.bottom >= probe;
       });
       setDark(isDark);
     };
@@ -45,21 +46,47 @@ export function Navbar() {
           <span className={`grid place-items-center w-7 h-7 rounded-lg text-sm transition-colors duration-500 ${dark ? "bg-white text-[#1e1b4b]" : "bg-[#1e1b4b] text-white"}`}>C</span>
           CollegeBuddy
         </Link>
+
         <ul className="hidden md:flex items-center gap-7 text-sm font-medium">
-          {LINKS.map((l) => (
+          {/* Only show feature links if user is logged in */}
+          {user && FEATURE_LINKS.map((l) => (
             <li key={l}>
               <a href={`#${l.toLowerCase()}`} className={`transition-colors ${dark ? "text-white/60 hover:text-white" : "text-gray-500 hover:text-gray-900"}`}>
                 {l}
               </a>
             </li>
           ))}
+          <li>
+            <Link to="/docs" className={`transition-colors ${dark ? "text-white/60 hover:text-white" : "text-gray-500 hover:text-gray-900"}`}>
+              Docs
+            </Link>
+          </li>
         </ul>
-        <Link
-          to="/signup"
-          className={`text-sm font-semibold rounded-full px-4 py-2 transition-colors duration-500 ${dark ? "bg-white text-black hover:bg-white/90" : "bg-black text-white hover:bg-black/85"}`}
-        >
-          Get started
-        </Link>
+
+        <div className="flex items-center gap-4">
+          {user ? (
+            <>
+              <Link to="/dashboard" className={`text-sm font-semibold transition-colors ${dark ? "text-white" : "text-gray-900"}`}>
+                Dashboard
+              </Link>
+              <button onClick={logout} className={`text-sm font-semibold rounded-full px-4 py-2 transition-colors duration-500 ${dark ? "bg-white/10 text-white hover:bg-white/20" : "bg-black/5 text-gray-900 hover:bg-black/10"}`}>
+                Log out
+              </button>
+            </>
+          ) : (
+            <>
+              <Link to="/auth" className={`text-sm font-semibold transition-colors ${dark ? "text-white/80 hover:text-white" : "text-gray-600 hover:text-gray-900"}`}>
+                Log in
+              </Link>
+              <Link
+                to="/auth"
+                className={`text-sm font-semibold rounded-full px-4 py-2 transition-colors duration-500 ${dark ? "bg-white text-black hover:bg-white/90" : "bg-black text-white hover:bg-black/85"}`}
+              >
+                Get started
+              </Link>
+            </>
+          )}
+        </div>
       </nav>
     </header>
   );

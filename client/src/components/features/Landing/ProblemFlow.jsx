@@ -3,7 +3,6 @@ import { useRef } from "react";
 import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
 import { Reveal, MaskLine } from "./Reveal";
 import { HangingNumber } from "./HangingNumber";
-
 const CHAT_LIST = [
   "CSE Official 2024-28", "CSE UNOFFICIAL ☠️", "Fest 2026 OFFICIAL",
   "Fest 2026 (REAL one)", "Notes Xchange [NO SPAM]", "hostel H4 mess updates"

@@ -1,41 +1,89 @@
 // client/src/App.jsx
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider, AuthContext } from "./context/AuthContext";
-import { useContext } from "react";
+import { useContext, Suspense, lazy, useState, useEffect } from "react";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
+import { AuthContext } from "./context/AuthContext";
+import { Loader } from "./components/ui/Loader";
 
-import LandingPage from "./pages/LandingPage";
-import AuthPage from "./pages/AuthPage";
-import DocsPage from "./pages/DocsPage";
-import Dashboard from "./pages/Dashboard";
+// Lazy load pages
+const LandingPage = lazy(() => import("./pages/LandingPage"));
+const AuthPage = lazy(() => import("./pages/AuthPage"));
+const DocsPage = lazy(() => import("./pages/DocsPage"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
 
-// Protected Route Wrapper
-const ProtectedRoute = ({ children }) => {
+const BOOT_MS = 2200; // Long enough to see the scan animation loop once
+
+function useBooted(ms) {
+  const [booted, setBooted] = useState(false);
+
+  useEffect(() => {
+    // Skip boot loader if already booted in this session
+    try {
+      if (sessionStorage.getItem("cb:booted") === "1") {
+        setBooted(true);
+        return;
+      }
+    } catch { /* ignore */ }
+
+    const timer = setTimeout(() => {
+      try {
+        sessionStorage.setItem("cb:booted", "1");
+      } catch { /* ignore */ }
+      setBooted(true);
+    }, ms);
+
+    return () => clearTimeout(timer);
+  }, [ms]);
+
+  return booted;
+}
+
+function ProtectedRoute({ children }) {
   const { user, loading } = useContext(AuthContext);
-  if (loading) return <div className="h-screen bg-[#09090b]" />;
+  if (loading) return null; // Loader is on screen
   if (!user) return <Navigate to="/auth" replace />;
   return children;
-};
+}
 
-function App() {
+export default function App() {
+  const { loading } = useContext(AuthContext);
+  const booted = useBooted(BOOT_MS);
+  const showLoader = !booted || loading;
+
   return (
-    <AuthProvider>
-      <BrowserRouter>
+    <>
+      {/* Loader with graceful fade out */}
+      <AnimatePresence>
+        {showLoader && (
+          <motion.div
+            key="loader"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6, ease: "easeInOut" }}
+            className="fixed inset-0 z-[100]"
+          >
+            <Loader fullScreen />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Main routes — always mounted but hidden behind the loader */}
+      <Suspense fallback={null}>
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/docs" element={<DocsPage />} />
           <Route path="/auth" element={<AuthPage />} />
-          <Route 
-            path="/dashboard" 
+          <Route
+            path="/dashboard"
             element={
               <ProtectedRoute>
                 <Dashboard />
               </ProtectedRoute>
-            } 
+            }
           />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+      </Suspense>
+    </>
   );
 }
-
-export default App;

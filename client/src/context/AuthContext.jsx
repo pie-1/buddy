@@ -9,12 +9,15 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check localStorage on initial load
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
-    setLoading(false);
+    // Add a small delay so the boot loader is actually visible
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 700); 
+    return () => clearTimeout(timer);
   }, []);
 
   const login = async (email, password) => {

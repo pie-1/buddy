@@ -1,35 +1,36 @@
+// client/src/components/ui/Loader.jsx
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
-const STEPS = ["Verifying .edu.np", "Finding your circle", "Unlocking campus"];
+const DEFAULT_STEPS = ["Verifying .edu.np", "Finding your circle", "Unlocking campus"];
 
 // one loop: scan line sweeps down and the dark pass is revealed behind it, holds, then wipes away
 const LOOP = { duration: 2.8, repeat: Infinity, times: [0, 0.5, 0.8, 1], ease: "easeInOut" };
 
 // one organic contour, drawn 6 times at different sizes
-const BLOB =
-  "M120 20 C170 18 215 55 218 105 C221 160 170 205 115 202 C60 199 22 150 25 100 C28 55 70 22 120 20 Z";
+const BLOB = "M120 20 C170 18 215 55 218 105 C221 160 170 205 115 202 C60 199 22 150 25 100 C28 55 70 22 120 20 Z";
 
-export function Loader({ fullScreen = false }) {
+export function Loader({ fullScreen = false, steps = DEFAULT_STEPS }) {
+  const reduce = useReducedMotion();
   const [step, setStep] = useState(0);
+
   useEffect(() => {
-    const id = setInterval(() => setStep((s) => (s + 1) % STEPS.length), 1400);
+    const id = setInterval(() => setStep((s) => (s + 1) % steps.length), 1400);
     return () => clearInterval(id);
-  }, []);
+  }, [steps.length]);
 
   const L = fullScreen ? 320 : 48; // string length (px)
 
   const content = (
     <div className="relative z-10 flex flex-col items-center">
-      {/* hanging ID card: swings like a pendulum from the top of its string */}
+      {/* hanging ID card: swings like a pendulum from the top of its string (still, for reduced motion) */}
       <motion.div
         className="relative w-[150px] h-[210px]"
         style={{ transformOrigin: `50% -${L}px` }}
-        initial={{ rotate: -2.5 }}
-        animate={{ rotate: 2.5 }}
+        initial={{ rotate: reduce ? 0 : -2.5 }}
+        animate={{ rotate: reduce ? 0 : 2.5 }}
         transition={{ duration: 2.2, repeat: Infinity, repeatType: "mirror", ease: "easeInOut" }}
       >
-        {/* string + clip */}
         <div
           className="absolute bottom-full left-1/2 -translate-x-1/2 w-[2px] bg-gradient-to-b from-transparent via-gray-300 to-gray-400"
           style={{ height: L }}
@@ -42,7 +43,7 @@ export function Loader({ fullScreen = false }) {
         <div className="absolute inset-0 rounded-2xl bg-[#f4f3ee] border border-[#d6d0c4] shadow-[0_24px_40px_-14px_rgba(0,0,0,0.2)] p-3 pt-5 flex flex-col items-center z-10">
           <span className="text-[7px] tracking-[0.25em] font-bold text-gray-700">COLLEGEBUDDY</span>
           <div className="mt-3 w-14 h-16 rounded-md bg-[#e4e4e7] border border-[#c4bdaf] grid place-items-center">
-            <svg className="w-7 h-7 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+            <svg className="w-7 h-7 text-gray-400" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
               <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
             </svg>
           </div>
@@ -81,8 +82,8 @@ export function Loader({ fullScreen = false }) {
         />
       </motion.div>
 
-      {/* status text + step dots */}
-      <div className="mt-12 h-10 flex flex-col items-center gap-3">
+      {/* status text, step dots and an indeterminate progress sliver */}
+      <div className="mt-12 flex flex-col items-center gap-3">
         <div className="h-4 overflow-hidden">
           <AnimatePresence mode="wait">
             <motion.p
@@ -93,27 +94,30 @@ export function Loader({ fullScreen = false }) {
               transition={{ duration: 0.25 }}
               className="text-[11px] text-indigo-600 tracking-[0.2em] uppercase font-bold"
             >
-              {STEPS[step]}
+              {steps[step]}
             </motion.p>
           </AnimatePresence>
         </div>
-        <div className="flex gap-1.5">
-          {STEPS.map((_, i) => (
-            <span
-              key={i}
-              className={`h-1.5 rounded-full transition-all duration-300 ${
-                i === step ? "w-5 bg-indigo-500" : "w-1.5 bg-indigo-200"
-              }`}
-            />
+        <div className="flex gap-1.5" aria-hidden>
+          {steps.map((_, i) => (
+            <span key={i} className={`h-1.5 rounded-full transition-all duration-300 ${i === step ? "w-5 bg-indigo-500" : "w-1.5 bg-indigo-200"}`} />
           ))}
         </div>
+        <div className="mt-1 h-[2px] w-36 rounded-full bg-indigo-100 overflow-hidden" aria-hidden>
+          <motion.div
+            className="h-full w-1/3 rounded-full bg-indigo-500"
+            animate={{ x: ["-100%", "300%"] }}
+            transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+          />
+        </div>
       </div>
+      <span className="sr-only">Loading CollegeBuddy</span>
     </div>
   );
 
   if (fullScreen) {
     return (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#fafaf8] overflow-hidden">
+      <div role="status" aria-live="polite" className="fixed inset-0 z-[100] flex items-center justify-center bg-[#fafaf8] overflow-hidden">
         {/* contour rings that draw themselves in, then slowly breathe */}
         <svg
           viewBox="-100 -90 440 400"
@@ -122,6 +126,7 @@ export function Loader({ fullScreen = false }) {
             maskImage: "radial-gradient(circle, #000 25%, transparent 72%)",
             WebkitMaskImage: "radial-gradient(circle, #000 25%, transparent 72%)",
           }}
+          aria-hidden
         >
           {[0.3, 0.5, 0.7, 0.9, 1.1, 1.3].map((s, i) => (
             <motion.path
@@ -132,7 +137,11 @@ export function Loader({ fullScreen = false }) {
               strokeWidth="0.55"
               style={{ transformBox: "fill-box", transformOrigin: "center", opacity: 0.28 - i * 0.03 }}
               initial={{ pathLength: 0, scale: s, rotate: i * 14 }}
-              animate={{ pathLength: 1, scale: [s, s * 1.05, s], rotate: [i * 14, i * 14 + (i % 2 ? -8 : 8), i * 14] }}
+              animate={
+                reduce
+                  ? { pathLength: 1, scale: s, rotate: i * 14 }
+                  : { pathLength: 1, scale: [s, s * 1.05, s], rotate: [i * 14, i * 14 + (i % 2 ? -8 : 8), i * 14] }
+              }
               transition={{
                 pathLength: { duration: 1.4, delay: i * 0.15, ease: "easeOut" },
                 scale: { duration: 6 + i, repeat: Infinity, ease: "easeInOut" },
@@ -146,5 +155,11 @@ export function Loader({ fullScreen = false }) {
     );
   }
 
-  return <div className="py-16 w-full flex justify-center">{content}</div>;
+  return (
+    <div role="status" aria-live="polite" className="py-16 w-full flex justify-center">
+      {content}
+    </div>
+  );
 }
+
+export default Loader;

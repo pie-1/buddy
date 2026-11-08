@@ -1,27 +1,20 @@
-// A living contour map drawn on <canvas>.
-// Height field = slowly flowing terrain + a "wake" that the cursor leaves behind.
-// The field is turned into contour lines every frame, so the LINES move and bend;
-// nothing slides as a block.
-//
-//   npm i d3-contour
+// client/src/components/ui/topoField.js
 import { contours } from "d3-contour";
 
-const CELL = 20; // px per grid cell (bigger = faster, softer lines)
-const LEVELS = Array.from({ length: 24 }, (_, i) => 0.08 + i * 0.055); // fixed, so lines never "jump"
-const MAJOR_EVERY = 5; // every 5th line is drawn stronger (index contour)
+const CELL = 20;
+const LEVELS = Array.from({ length: 30 }, (_, i) => 0.06 + i * 0.042);
+const MAJOR_EVERY = 5;
 
-const LEAN = 0.5; // how far the big shapes lean with the mouse (lattice units)
-const WAKE_SIGMA = 80; // width of the bump the cursor leaves (px)
+const LEAN = 0.2; // pointer parallax: only the lines drift, gently
+const WAKE_SIGMA = 120;
 const WAKE_REACH = WAKE_SIGMA * 3;
-const WAKE_FADE = 0.987; // per frame @60fps: how fast the wake relaxes
+const WAKE_FADE = 0.985;
 
-// noise octaves: freq, amplitude, rotation, drift (lattice units / second)
-// 1 lattice unit = 460px at freq 1, so the biggest shapes drift ~18px/s
 const BASE = 1 / 460;
 const OCT = [
-  { f: 1.0, a: 1.0, r: 0.0, vx: 0.04, vy: 0.024 },
-  { f: 2.1, a: 0.5, r: 0.7, vx: -0.07, vy: 0.045 },
-  { f: 4.3, a: 0.25, r: 1.5, vx: 0.11, vy: -0.075 },
+  { f: 1.0, a: 1.0, r: 0.0, vx: 0.02, vy: 0.012, flow: 1.0 },
+  { f: 2.1, a: 0.5, r: 0.7, vx: -0.035, vy: 0.022, flow: 1.4 },
+  { f: 4.3, a: 0.25, r: 1.5, vx: 0.055, vy: -0.037, flow: 1.9 },
 ].map((o, k) => ({
   ...o,
   freq: o.f * BASE,
@@ -50,9 +43,8 @@ function noise(x, y) {
   return a + (b - a) * xf + (c - a) * yf + (a - b - c + d) * xf * yf;
 }
 
-// closed ring of grid points -> smooth curve (quadratic through the midpoints)
 function addRing(p, ring) {
-  const n = ring.length - 1; // last point repeats the first
+  const n = ring.length - 1;
   if (n < 3) return;
   p.moveTo(((ring[0][0] + ring[1][0]) / 2) * CELL, ((ring[0][1] + ring[1][1]) / 2) * CELL);
   for (let i = 1; i <= n; i++) {
@@ -75,7 +67,7 @@ export function createTopoField(canvas) {
     H = canvas.clientHeight;
     canvas.width = Math.round(W * dpr);
     canvas.height = Math.round(H * dpr);
-    cols = Math.ceil(W / CELL) + 2; // 1 spare cell on every side
+    cols = Math.ceil(W / CELL) + 2;
     rows = Math.ceil(H / CELL) + 2;
     values = new Float32Array(cols * rows);
     ambient = new Float32Array(cols * rows);
@@ -88,9 +80,7 @@ export function createTopoField(canvas) {
   const ro = new ResizeObserver(resize);
   ro.observe(canvas);
 
-  // sample (i,j) sits at grid pos (i+.5, j+.5) and we shift the canvas by -1 cell,
-  // so its pixel position is (i - 0.5) * CELL
-  function sampleAmbient(t, leanX, leanY) {
+  function sampleAmbient(t, leanX, leanY, flow) {
     for (let j = 0; j < rows; j++) {
       const wy = (j - 0.5) * CELL;
       for (let i = 0; i < cols; i++) {
@@ -99,11 +89,12 @@ export function createTopoField(canvas) {
         for (let k = 0; k < 3; k++) {
           const o = OCT[k];
           const lean = k === 0 ? 1 : k === 1 ? 0.5 : 0;
+          const fl = flow * o.flow;
           n +=
             o.a *
             noise(
-              (wx * o.c - wy * o.s) * o.freq + o.vx * t + o.ox + leanX * lean,
-              (wx * o.s + wy * o.c) * o.freq + o.vy * t + o.oy + leanY * lean
+              (wx * o.c - wy * o.s) * o.freq + o.vx * t + o.ox + leanX * lean + fl,
+              (wx * o.s + wy * o.c) * o.freq + o.vy * t + o.oy + leanY * lean + fl * 0.6
             );
         }
         ambient[j * cols + i] = n / NORM;
@@ -111,7 +102,6 @@ export function createTopoField(canvas) {
     }
   }
 
-  // the wake spreads out a little and fades, like ripples settling
   function relaxWake(dt) {
     const k = Math.pow(WAKE_FADE, dt * 60);
     for (let j = 0; j < rows; j++) {
@@ -140,21 +130,18 @@ export function createTopoField(canvas) {
         const dx = (i - 0.5) * CELL - px;
         const g = amp * Math.exp(-(dx * dx + dy * dy) * inv2s2);
         const idx = j * cols + i;
-        if (g > wake[idx]) wake[idx] = g; // max, not +: standing still never piles up
+        if (g > wake[idx]) wake[idx] = g;
       }
     }
   }
 
-  // t: flow time (s) · dt: frame time (s) · x,y: cursor in canvas px
-  // speed: cursor speed (px/frame) · on: 0..1 · mx,my: smoothed mouse, -0.5..0.5
-  function draw({ t, dt, x, y, speed, on, mx, my }) {
-    // 1. height field
-    if (frame++ % 2 === 0) sampleAmbient(t, -mx * LEAN, -my * LEAN); // slow drift: 30x/s is plenty
+  // flow: scroll-driven offset so the terrain gently morphs as you scroll
+  function draw({ t, dt, x, y, speed, on, mx, my, flow = 0 }) {
+    if (frame++ % 2 === 0) sampleAmbient(t, -mx * LEAN, -my * LEAN, flow);
     relaxWake(dt);
-    if (on > 0.02) stampWake(x, y, (0.14 + 0.34 * Math.min(1, speed / 14)) * Math.min(on, 1));
+    if (on > 0.02) stampWake(x, y, (0.1 + 0.22 * Math.min(1, speed / 14)) * Math.min(on, 1));
     for (let k = 0; k < values.length; k++) values[k] = ambient[k] + wake[k];
 
-    // 2. contours -> two Path2D (normal + index lines)
     const geos = gen(values);
     const minor = new Path2D();
     const major = new Path2D();
@@ -163,16 +150,15 @@ export function createTopoField(canvas) {
       g.coordinates.forEach((poly) => poly.forEach((ring) => addRing(target, ring)));
     });
 
-    // 3. lines
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, W, H);
     ctx.lineJoin = "round";
     ctx.setTransform(dpr, 0, 0, dpr, -CELL * dpr, -CELL * dpr);
     ctx.lineWidth = 1;
-    ctx.strokeStyle = "rgba(110,110,185,.17)";
+    ctx.strokeStyle = "rgba(120,120,180,.15)";
     ctx.stroke(minor);
     ctx.lineWidth = 1.2;
-    ctx.strokeStyle = "rgba(99,102,241,.34)";
+    ctx.strokeStyle = "rgba(99,102,241,.28)";
     ctx.stroke(major);
   }
 

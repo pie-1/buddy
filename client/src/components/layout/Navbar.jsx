@@ -1,41 +1,66 @@
-import { Link } from 'react-router-dom';
-import { Button } from '../ui/Button';
+// client/src/components/layout/Navbar.jsx
+// Adapts to whatever is behind it: any section with data-nav-theme="dark" flips the bar to light-on-dark.
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+
+const LINKS = ["Marketplace", "Borrow", "Roommates", "Events"];
 
 export function Navbar() {
+  const [dark, setDark] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    let raf = 0;
+    const check = () => {
+      raf = 0;
+      setScrolled(window.scrollY > 24);
+      const probe = 36; // y of the bar's centre
+      const isDark = [...document.querySelectorAll('[data-nav-theme="dark"]')].some((el) => {
+        const r = el.getBoundingClientRect();
+        return r.top - 60 <= probe && r.bottom >= probe; // 60px lead-in covers the wave edge
+      });
+      setDark(isDark);
+    };
+    const onScroll = () => !raf && (raf = requestAnimationFrame(check));
+    check();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      cancelAnimationFrame(raf);
+    };
+  }, []);
+
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-black/5 bg-white/60 backdrop-blur-md">
-      <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-        
-        {/* Logo Area */}
-        <Link to="/" className="flex items-center gap-3">
-          {/* Logo SVG placeholder - Replace with your actual logo image */}
-          <div className="w-8 h-8 bg-black rounded-md flex items-center justify-center text-white font-serif font-bold">
-            C
-          </div>
-          <span className="text-2xl font-serif font-bold text-gray-900 tracking-tight">
-            CollegeBuddy
-          </span>
+    <header className="fixed top-0 inset-x-0 z-50 flex justify-center px-4 pt-3 pointer-events-none">
+      <nav
+        className={`pointer-events-auto flex items-center justify-between gap-8 w-full max-w-5xl rounded-full px-5 py-2.5 border backdrop-blur-md transition-all duration-500 ${
+          dark
+            ? "bg-white/[0.06] border-white/10 text-white"
+            : "bg-white/70 border-black/5 text-gray-900"
+        } ${scrolled ? "shadow-[0_8px_30px_-12px_rgba(0,0,0,.25)]" : ""}`}
+      >
+        <Link to="/" className="flex items-center gap-2 font-serif font-bold text-lg">
+          <span className={`grid place-items-center w-7 h-7 rounded-lg text-sm transition-colors duration-500 ${dark ? "bg-white text-[#1e1b4b]" : "bg-[#1e1b4b] text-white"}`}>C</span>
+          CollegeBuddy
         </Link>
-
-        {/* Navigation Links (Hidden on mobile for now) */}
-        <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
-          <Link to="/marketplace" className="hover:text-black transition-colors">Marketplace</Link>
-          <Link to="/roommates" className="hover:text-black transition-colors">Roommates</Link>
-          <Link to="/events" className="hover:text-black transition-colors">Events</Link>
-        </div>
-
-        {/* CTA Button */}
-        <div className="flex items-center gap-4">
-          <Link to="/login" className="text-sm font-medium text-gray-600 hover:text-black hidden sm:block">
-            Log in
-          </Link>
-          <Link to="/signup">
-            <Button variant="primary" className="bg-black text-white hover:bg-gray-800 hover:shadow-none rounded-full px-6">
-              Enter CollegeBuddy
-            </Button>
-          </Link>
-        </div>
-      </div>
-    </nav>
+        <ul className="hidden md:flex items-center gap-7 text-sm font-medium">
+          {LINKS.map((l) => (
+            <li key={l}>
+              <a href={`#${l.toLowerCase()}`} className={`transition-colors ${dark ? "text-white/60 hover:text-white" : "text-gray-500 hover:text-gray-900"}`}>
+                {l}
+              </a>
+            </li>
+          ))}
+        </ul>
+        <Link
+          to="/signup"
+          className={`text-sm font-semibold rounded-full px-4 py-2 transition-colors duration-500 ${dark ? "bg-white text-black hover:bg-white/90" : "bg-black text-white hover:bg-black/85"}`}
+        >
+          Get started
+        </Link>
+      </nav>
+    </header>
   );
 }

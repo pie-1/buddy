@@ -10,6 +10,10 @@ const LandingPage = lazy(() => import("./pages/LandingPage"));
 const AuthPage = lazy(() => import("./pages/AuthPage"));
 const DocsPage = lazy(() => import("./pages/DocsPage"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Marketplace = lazy(() => import("./pages/Marketplace"));
+const ListingDetail = lazy(() => import("./pages/ListingDetail")); 
+const CreateListing = lazy(() => import("./pages/CreateListing"));
+
 
 const BOOT_MS = 2200; // Long enough to see the scan animation loop once
 
@@ -81,6 +85,12 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          <Route path="/marketplace" element={<Marketplace />} />
+          <Route path="/marketplace/:id" element={<ListingDetail />} />
+          <Route path="/marketplace/new" element={<CreateListing />} />
+  
+
+
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>

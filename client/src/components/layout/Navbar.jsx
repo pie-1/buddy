@@ -8,7 +8,7 @@ import { AuthContext } from "../../context/AuthContext";
 const GITHUB_REPO = "https://github.com/pie-1/buddy";
 
 const FEATURE_LINKS = [
-  { label: "Marketplace", to: "/dashboard#marketplace" },
+  { label: "Marketplace", to: "/marketplace" },
   { label: "Borrow", to: "/dashboard#borrow" },
   { label: "Roommates", to: "/dashboard#roommates" },
   { label: "Events", to: "/dashboard#events" },

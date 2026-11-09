@@ -8,6 +8,7 @@ import listingRoutes from "./routes/listingRoutes.js";
 import roommateRoutes from "./routes/roommateRoutes.js"; 
 import eventRoutes from "./routes/eventRoutes.js"; 
 import chatRoutes from "./routes/chatRoutes.js";   
+import uploadRoutes from "./routes/uploadRoutes.js";
 
 dotenv.config();
 connectDB();
@@ -22,6 +23,7 @@ app.use("/api/listings", listingRoutes);
 app.use("/api/roommates", roommateRoutes); 
 app.use("/api/events", eventRoutes);  
 app.use("/api/chat", chatRoutes); 
+app.use("/api/upload", uploadRoutes);                  
 
 app.get("/api/health", (req, res) => {
   res.status(200).json({ status: "success" });

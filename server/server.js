@@ -1,8 +1,13 @@
+// server/server.js
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
+import listingRoutes from "./routes/listingRoutes.js"; 
+import roommateRoutes from "./routes/roommateRoutes.js"; 
+import eventRoutes from "./routes/eventRoutes.js"; 
+import chatRoutes from "./routes/chatRoutes.js";   
 
 dotenv.config();
 connectDB();
@@ -13,6 +18,10 @@ app.use(cors());
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);
+app.use("/api/listings", listingRoutes); 
+app.use("/api/roommates", roommateRoutes); 
+app.use("/api/events", eventRoutes);  
+app.use("/api/chat", chatRoutes); 
 
 app.get("/api/health", (req, res) => {
   res.status(200).json({ status: "success" });

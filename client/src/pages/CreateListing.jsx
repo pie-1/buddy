@@ -39,7 +39,7 @@ export default function CreateListing() {
     rentPeriod: "day",
     condition: "good",
   });
-  const [images, setImages] = useState([]);
+  const [files, setFiles] = useState([]); // [{ url, thumb, isPdf }]
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -66,7 +66,7 @@ export default function CreateListing() {
         price: Number(form.price),
         condition: form.condition,
         rentPeriod: needsPeriod ? form.rentPeriod : null,
-        images, // Already Cloudinary URLs from the dropzone
+        images: files.map((f) => f.url),
       };
 
       const created = await createListing(payload);
@@ -104,14 +104,12 @@ export default function CreateListing() {
             transition={{ duration: 0.6, delay: 0.1, ease: EASE }}
             className="bg-[#14121f]/70 backdrop-blur-xl border border-white/10 rounded-3xl p-6 md:p-8 space-y-8"
           >
-            {/* Photos */}
             <section>
-              <h2 className="text-xl font-bold mb-1">Photos</h2>
-              <p className="text-sm text-gray-400 mb-4">First photo becomes the cover. Images are auto-compressed.</p>
-              <ImageDropzone images={images} onChange={setImages} max={4} />
+              <h2 className="text-xl font-bold mb-1">Photos & Files</h2>
+              <p className="text-sm text-gray-400 mb-4">First photo becomes the cover. Up to 2 PDFs allowed.</p>
+              <ImageDropzone files={files} onChange={setFiles} max={4} />
             </section>
 
-            {/* Basics */}
             <section className="space-y-5">
               <h2 className="text-xl font-bold mb-1">Basics</h2>
 
@@ -148,7 +146,6 @@ export default function CreateListing() {
               </div>
             </section>
 
-            {/* Intent with Visual Identity */}
             <section>
               <h2 className="text-xl font-bold mb-1">What are you doing?</h2>
               <p className="text-sm text-gray-400 mb-4">This decides the fields below.</p>
@@ -175,7 +172,6 @@ export default function CreateListing() {
               </div>
             </section>
 
-            {/* Pricing */}
             <section className="space-y-5">
               <h2 className="text-xl font-bold mb-1">Pricing</h2>
               <div className="grid sm:grid-cols-2 gap-4">
@@ -226,9 +222,8 @@ export default function CreateListing() {
             </div>
           </motion.form>
 
-          {/* Preview */}
           <div>
-            <ListingPreviewCard form={form} images={images} sellerName={user?.name} />
+            <ListingPreviewCard form={form} images={files.map((f) => f.thumb)} sellerName={user?.name} />
           </div>
         </div>
       </div>

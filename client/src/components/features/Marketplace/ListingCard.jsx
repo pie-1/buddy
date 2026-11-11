@@ -1,7 +1,7 @@
 // client/src/components/features/Marketplace/ListingCard.jsx
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ShieldCheck } from "lucide-react";
+import { ShieldCheck, FileText } from "lucide-react";
 
 const CATEGORY = {
   sell: { label: "Sell", cls: "text-indigo-300 border-indigo-500/30 bg-indigo-500/10", glow: "rgba(99,102,241,0.4)" },
@@ -24,10 +24,18 @@ const cardVariants = {
 
 export default function ListingCard({ listing, index = 0 }) {
   const cat = CATEGORY[listing.category] || CATEGORY.sell;
-  const cover = listing.images?.[0];
+  const images = listing.images || [];
+  const cover = images[0];
+  const hasPdf = images.some((url) => typeof url === "string" && url.toLowerCase().endsWith(".pdf"));
   const priceLabel = (PRICE_FORMAT[listing.category] || PRICE_FORMAT.sell)(listing.price, listing.rentPeriod);
   const seller = listing.sellerId;
   const statusBadge = listing.status !== "active" && listing.status;
+
+  // When the cover IS the PDF, its Cloudinary URL won't render as an image.
+  // Fall back to the first non-PDF image for the cover, or show a PDF placeholder.
+  const coverIsPdf = typeof cover === "string" && cover.toLowerCase().endsWith(".pdf");
+  const nonPdfImage = images.find((u) => typeof u === "string" && !u.toLowerCase().endsWith(".pdf"));
+  const displayCover = coverIsPdf ? nonPdfImage : cover;
 
   return (
     <motion.div
@@ -52,12 +60,18 @@ export default function ListingCard({ listing, index = 0 }) {
 
         {/* media */}
         <div className="relative h-44 bg-white/5 overflow-hidden shrink-0">
-          {cover ? (
+          {displayCover ? (
             <img
-              src={cover}
+              src={displayCover}
               alt={listing.title}
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
             />
+          ) : coverIsPdf ? (
+            // Only a PDF was uploaded, no image cover
+            <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-red-400/60">
+              <FileText size={48} />
+              <span className="text-[10px] font-bold uppercase tracking-widest">PDF attached</span>
+            </div>
           ) : (
             <div className="w-full h-full flex items-center justify-center text-6xl text-white/[0.06] font-serif">
               {listing.title?.[0]?.toUpperCase() || "?"}
@@ -68,6 +82,13 @@ export default function ListingCard({ listing, index = 0 }) {
           <span className={`absolute top-3 left-3 text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full border backdrop-blur-md ${cat.cls}`}>
             {cat.label}
           </span>
+
+          {/* PDF badge */}
+          {hasPdf && (
+            <span className="absolute bottom-3 left-3 flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded-full bg-red-500/20 border border-red-500/40 text-red-200 backdrop-blur-md">
+              <FileText size={10} /> PDF
+            </span>
+          )}
 
           {/* status pill */}
           {statusBadge && (
@@ -84,7 +105,6 @@ export default function ListingCard({ listing, index = 0 }) {
           </h3>
           <p className="text-gray-400 text-sm line-clamp-2 mb-4 leading-relaxed">{listing.description}</p>
 
-          {/* price block, slides up subtly on hover */}
           <div className="mt-auto flex items-end justify-between">
             <div>
               <div className="text-[9px] uppercase tracking-[0.2em] text-gray-500 mb-1 font-bold">Price</div>

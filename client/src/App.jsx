@@ -1,6 +1,6 @@
 // client/src/App.jsx
 import { useContext, Suspense, lazy, useState, useEffect } from "react";
-import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { AuthContext } from "./context/AuthContext";
 import { Loader } from "./components/ui/Loader";
@@ -11,17 +11,16 @@ const AuthPage = lazy(() => import("./pages/AuthPage"));
 const DocsPage = lazy(() => import("./pages/DocsPage"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Marketplace = lazy(() => import("./pages/Marketplace"));
-const ListingDetail = lazy(() => import("./pages/ListingDetail")); 
+const ListingDetail = lazy(() => import("./pages/ListingDetail"));
 const CreateListing = lazy(() => import("./pages/CreateListing"));
+const Chat = lazy(() => import("./pages/Chat"));
 
-
-const BOOT_MS = 2200; // Long enough to see the scan animation loop once
+const BOOT_MS = 2200;
 
 function useBooted(ms) {
   const [booted, setBooted] = useState(false);
 
   useEffect(() => {
-    // Skip boot loader if already booted in this session
     try {
       if (sessionStorage.getItem("cb:booted") === "1") {
         setBooted(true);
@@ -44,7 +43,7 @@ function useBooted(ms) {
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useContext(AuthContext);
-  if (loading) return null; // Loader is on screen
+  if (loading) return null;
   if (!user) return <Navigate to="/auth" replace />;
   return children;
 }
@@ -56,7 +55,6 @@ export default function App() {
 
   return (
     <>
-      {/* Loader with graceful fade out */}
       <AnimatePresence>
         {showLoader && (
           <motion.div
@@ -71,12 +69,12 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* Main routes — always mounted but hidden behind the loader */}
       <Suspense fallback={null}>
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/docs" element={<DocsPage />} />
           <Route path="/auth" element={<AuthPage />} />
+
           <Route
             path="/dashboard"
             element={
@@ -85,11 +83,36 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-          <Route path="/marketplace" element={<Marketplace />} />
-          <Route path="/marketplace/:id" element={<ListingDetail />} />
-          <Route path="/marketplace/new" element={<CreateListing />} />
-  
 
+          {/* Marketplace: static routes BEFORE dynamic :id */}
+          <Route path="/marketplace" element={<Marketplace />} />
+          <Route
+            path="/marketplace/new"
+            element={
+              <ProtectedRoute>
+                <CreateListing />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/marketplace/:id" element={<ListingDetail />} />
+
+          {/* Chat */}
+          <Route
+            path="/chat"
+            element={
+              <ProtectedRoute>
+                <Chat />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/chat/:id"
+            element={
+              <ProtectedRoute>
+                <Chat />
+              </ProtectedRoute>
+            }
+          />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

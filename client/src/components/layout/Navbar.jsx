@@ -2,14 +2,14 @@
 import { useEffect, useRef, useState, useContext } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { FaGithub } from "react-icons/fa"; // Switched from lucide-react
+import { FaGithub } from "react-icons/fa";
 import { AuthContext } from "../../context/AuthContext";
 
 const GITHUB_REPO = "https://github.com/pie-1/buddy";
 
 const FEATURE_LINKS = [
   { label: "Marketplace", to: "/marketplace" },
-  { label: "Borrow", to: "/dashboard#borrow" },
+  { label: "Chat", to: "/chat" },
   { label: "Roommates", to: "/dashboard#roommates" },
   { label: "Events", to: "/dashboard#events" },
 ];

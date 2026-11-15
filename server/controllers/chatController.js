@@ -2,7 +2,16 @@
 import Conversation from "../models/Conversation.js";
 import Message from "../models/Message.js";
 
-// Find an existing conversation between the same participants for the same context, or create one.
+// Robust participant check: handles populated docs, ObjectIds, and strings
+function isParticipant(conversation, userId) {
+  if (!userId) return false;
+  const target = userId.toString();
+  return conversation.participants.some((p) => {
+    const id = p?._id?.toString() || p?.toString();
+    return id === target;
+  });
+}
+
 export const startConversation = async (req, res) => {
   try {
     const { recipientId, contextType, contextId } = req.body;
@@ -34,28 +43,37 @@ export const startConversation = async (req, res) => {
   }
 };
 
-// List all conversations for the logged-in user, grouped by recency.
 export const getMyConversations = async (req, res) => {
   try {
-    const conversations = await Conversation.find({ participants: req.user._id, status: "open" })
+    // Guard: if req.user is missing, return 401, not all conversations
+    if (!req.user?._id) {
+      return res.status(401).json({ message: "Not authorized" });
+    }
+
+    const conversations = await Conversation.find({
+      participants: req.user._id,
+      status: "open",
+    })
       .populate("participants", "name university trustScore")
       .sort({ updatedAt: -1 })
       .limit(100);
 
-    res.json(conversations);
+    // Defense in depth: filter again in JS
+    const mine = conversations.filter((c) => isParticipant(c, req.user._id));
+
+    res.json(mine);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// Get full conversation detail with messages (paginated).
 export const getConversationById = async (req, res) => {
   try {
     const conversation = await Conversation.findById(req.params.id)
       .populate("participants", "name university trustScore");
     if (!conversation) return res.status(404).json({ message: "Conversation not found" });
 
-    if (!conversation.participants.some((p) => p._id.toString() === req.user._id.toString())) {
+    if (!isParticipant(conversation, req.user._id)) {
       return res.status(403).json({ message: "Not a participant in this conversation" });
     }
 
@@ -71,7 +89,6 @@ export const getConversationById = async (req, res) => {
   }
 };
 
-// Send a message (or system event) into a conversation.
 export const sendMessage = async (req, res) => {
   try {
     const { text, image, systemEvent } = req.body;
@@ -83,7 +100,7 @@ export const sendMessage = async (req, res) => {
     const conversation = await Conversation.findById(req.params.id);
     if (!conversation) return res.status(404).json({ message: "Conversation not found" });
 
-    if (!conversation.participants.some((p) => p.toString() === req.user._id.toString())) {
+    if (!isParticipant(conversation, req.user._id)) {
       return res.status(403).json({ message: "Not a participant in this conversation" });
     }
 
@@ -109,13 +126,12 @@ export const sendMessage = async (req, res) => {
   }
 };
 
-// Mark conversation as archived (soft close).
 export const archiveConversation = async (req, res) => {
   try {
     const conversation = await Conversation.findById(req.params.id);
     if (!conversation) return res.status(404).json({ message: "Conversation not found" });
 
-    if (!conversation.participants.some((p) => p.toString() === req.user._id.toString())) {
+    if (!isParticipant(conversation, req.user._id)) {
       return res.status(403).json({ message: "Not a participant in this conversation" });
     }
 

@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, useContext } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { FaGithub, FaStar, FaRegStar } from "react-icons/fa";
-import { FiUser, FiUsers, FiChevronDown } from "react-icons/fi";
+import { FiUser, FiUsers, FiChevronDown, FiStar } from "react-icons/fi";
 import { AuthContext } from "../../context/AuthContext";
 
 const GITHUB_REPO = "https://github.com/pie-1/buddy";
@@ -15,7 +15,6 @@ const FEATURE_LINKS = [
   { label: "Chat", to: "/chat" },
   { label: "Roommates", to: "/roommates" },
   { label: "Events", to: "/events" },
-  { label: "Help", to: "/help" },
 ];
 
 function GitHubWidget({ dark }) {
@@ -90,6 +89,10 @@ function ProfileMenu({ dark, user, onNavigate }) {
   }, [open]);
 
   const linkCls = dark ? "text-white/70 hover:text-white" : "text-stone-600 hover:text-stone-900";
+  const itemCls = dark
+    ? "text-white/80 hover:bg-white/5"
+    : "text-stone-700 hover:bg-stone-50";
+  const borderCls = dark ? "border-white/10" : "border-stone-100";
 
   return (
     <div ref={ref} className="relative z-[60]">
@@ -116,20 +119,23 @@ function ProfileMenu({ dark, user, onNavigate }) {
             <Link
               to="/profile/me"
               onClick={() => { setOpen(false); onNavigate?.(); }}
-              className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold transition-colors ${
-                dark ? "text-white/80 hover:bg-white/5" : "text-stone-700 hover:bg-stone-50"
-              }`}
+              className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold transition-colors ${itemCls}`}
             >
               <FiUser size={14} /> My profile
             </Link>
             <Link
               to="/connect"
               onClick={() => { setOpen(false); onNavigate?.(); }}
-              className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold border-t transition-colors ${
-                dark ? "border-white/10 text-white/80 hover:bg-white/5" : "border-stone-100 text-stone-700 hover:bg-stone-50"
-              }`}
+              className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold border-t transition-colors ${borderCls} ${itemCls}`}
             >
               <FiUsers size={14} /> Campus directory
+            </Link>
+            <Link
+              to="/spotlight"
+              onClick={() => { setOpen(false); onNavigate?.(); }}
+              className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold border-t transition-colors ${borderCls} ${itemCls}`}
+            >
+              <FiStar size={14} /> Spotlight
             </Link>
           </motion.div>
         )}
@@ -263,6 +269,7 @@ export function Navbar() {
                   <>
                     <Link to="/profile/me" className="px-4 py-3 rounded-2xl text-sm font-medium opacity-80 hover:opacity-100">My profile</Link>
                     <Link to="/connect" className="px-4 py-3 rounded-2xl text-sm font-medium opacity-80 hover:opacity-100">Campus directory</Link>
+                    <Link to="/spotlight" className="px-4 py-3 rounded-2xl text-sm font-medium opacity-80 hover:opacity-100">Spotlight</Link>
                   </>
                 )}
                 <Link to="/docs" className="px-4 py-3 rounded-2xl text-sm font-medium opacity-80 hover:opacity-100">Docs</Link>

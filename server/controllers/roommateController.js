@@ -69,15 +69,22 @@ export const getAllRoommates = async (req, res) => {
     }
     if (search) filter.$text = { $search: search };
 
-    const sortBy =
-      sort === "rent-asc" ? { rent: 1 } :
-      sort === "rent-desc" ? { rent: -1 } :
-      { createdAt: -1 };
+    const now = new Date();
 
     const roommates = await Roommate.find(filter)
-      .populate("postedBy", "name university trustScore graduationYear")
-      .sort(sortBy)
+      .populate("postedBy", "name university trustScore graduationYear spotlightUntil")
+      .sort({ createdAt: -1 })
       .limit(100);
+
+    // Spotlight posters' listings float to top
+    roommates.sort((a, b) => {
+      const aSpot = a.postedBy?.spotlightUntil && a.postedBy.spotlightUntil > now ? 1 : 0;
+      const bSpot = b.postedBy?.spotlightUntil && b.postedBy.spotlightUntil > now ? 1 : 0;
+      if (aSpot !== bSpot) return bSpot - aSpot;
+      if (sort === "rent-asc") return a.rent - b.rent;
+      if (sort === "rent-desc") return b.rent - a.rent;
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    });
 
     res.json(roommates);
   } catch (error) {
@@ -88,7 +95,7 @@ export const getAllRoommates = async (req, res) => {
 export const getRoommateById = async (req, res) => {
   try {
     const roommate = await Roommate.findById(req.params.id)
-      .populate("postedBy", "name university trustScore graduationYear");
+      .populate("postedBy", "name university trustScore graduationYear spotlightUntil");
     if (!roommate) return res.status(404).json({ message: "Roommate profile not found" });
     res.json(roommate);
   } catch (error) {

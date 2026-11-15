@@ -34,12 +34,23 @@ export const getAllListings = async (req, res) => {
     if (category) filter.category = category;
     if (search) filter.$text = { $search: search };
 
-    const sortBy = sort === "price-asc" ? { price: 1 } : sort === "price-desc" ? { price: -1 } : { createdAt: -1 };
+    const now = new Date();
 
     const listings = await Listing.find(filter)
-      .populate("sellerId", "name university trustScore isAlumni")
-      .sort(sortBy)
+      .populate("sellerId", "name university trustScore isAlumni spotlightUntil")
+      .sort({ createdAt: -1 })
       .limit(100);
+
+    // Spotlight sellers' listings float to top
+    listings.sort((a, b) => {
+      const aSpot = a.sellerId?.spotlightUntil && a.sellerId.spotlightUntil > now ? 1 : 0;
+      const bSpot = b.sellerId?.spotlightUntil && b.sellerId.spotlightUntil > now ? 1 : 0;
+      if (aSpot !== bSpot) return bSpot - aSpot;
+      // Fall back to the requested sort
+      if (sort === "price-asc") return a.price - b.price;
+      if (sort === "price-desc") return b.price - a.price;
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    });
 
     res.json(listings);
   } catch (error) {

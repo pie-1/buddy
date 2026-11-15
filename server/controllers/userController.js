@@ -5,6 +5,7 @@ import Roommate from "../models/Roommate.js";
 import Event from "../models/Event.js";
 import TeamRequest from "../models/TeamRequest.js";
 import Conversation from "../models/Conversation.js";
+import HelpPost from "../models/HelpPost.js";
 
 export const getMyProfile = async (req, res) => {
   try {
@@ -25,7 +26,7 @@ export const getProfileById = async (req, res) => {
     if (!user) return res.status(404).json({ message: "User not found" });
 
     // Fan-out queries — all parallelized
-    const [listings, roommate, events, teamRequests, mutual] = await Promise.all([
+    const [listings, roommate, events, teamRequests, helpPosts, mutual] = await Promise.all([
       // Active marketplace listings by this user
       Listing.find({ sellerId: id, status: "active" })
         .sort({ createdAt: -1 })
@@ -44,6 +45,10 @@ export const getProfileById = async (req, res) => {
       // Their active team requests
       TeamRequest.find({ posterId: id, status: "open" })
         .populate("eventId", "title date")
+        .sort({ createdAt: -1 })
+        .limit(10),
+    
+      HelpPost.find({ authorId: id, status: "open" })
         .sort({ createdAt: -1 })
         .limit(10),
 
@@ -69,6 +74,7 @@ export const getProfileById = async (req, res) => {
       roommate,
       events,
       teamRequests,
+      helpPosts,
       mutual,
       spotlight,
     });
@@ -115,13 +121,25 @@ export const getDirectory = async (req, res) => {
       ];
     }
 
-    // Spotlight users first, then newest
+    const now = new Date();
+
+    // Pull everyone (limit 200), then sort in-memory: spotlighted first, then newest
     const users = await User.find(filter)
-      .select("name avatar bio university college department graduationYear skills trustScore role spotlightUntil")
-      .sort({ spotlightUntil: -1, createdAt: -1 })
+      .select("name avatar bio university college department graduationYear skills trustScore role spotlightUntil createdAt")
       .limit(200);
 
-    res.json(users);
+    users.sort((a, b) => {
+      const aSpot = a.spotlightUntil && a.spotlightUntil > now ? 1 : 0;
+      const bSpot = b.spotlightUntil && b.spotlightUntil > now ? 1 : 0;
+      if (aSpot !== bSpot) return bSpot - aSpot; // spotlight first
+      return new Date(b.createdAt) - new Date(a.createdAt); // newest second
+    });
+
+    // Split into "spotlight" and "rest" so the frontend can render them differently
+    const spotlighted = users.filter((u) => u.spotlightUntil && u.spotlightUntil > now).slice(0, 3);
+    const rest = users.filter((u) => !u.spotlightUntil || u.spotlightUntil <= now);
+
+    res.json({ spotlighted, all: rest });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

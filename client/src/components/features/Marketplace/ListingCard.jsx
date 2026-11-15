@@ -1,7 +1,7 @@
 // client/src/components/features/Marketplace/ListingCard.jsx
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ShieldCheck, FileText } from "lucide-react";
+import { ShieldCheck, FileText, Star } from "lucide-react";
 
 const CATEGORY = {
   sell: { label: "Sell", cls: "text-indigo-300 border-indigo-500/30 bg-indigo-500/10", glow: "rgba(99,102,241,0.4)" },
@@ -30,9 +30,8 @@ export default function ListingCard({ listing, index = 0 }) {
   const priceLabel = (PRICE_FORMAT[listing.category] || PRICE_FORMAT.sell)(listing.price, listing.rentPeriod);
   const seller = listing.sellerId;
   const statusBadge = listing.status !== "active" && listing.status;
+  const isSpotlight = seller?.spotlightUntil && new Date(seller.spotlightUntil) > new Date();
 
-  // When the cover IS the PDF, its Cloudinary URL won't render as an image.
-  // Fall back to the first non-PDF image for the cover, or show a PDF placeholder.
   const coverIsPdf = typeof cover === "string" && cover.toLowerCase().endsWith(".pdf");
   const nonPdfImage = images.find((u) => typeof u === "string" && !u.toLowerCase().endsWith(".pdf"));
   const displayCover = coverIsPdf ? nonPdfImage : cover;
@@ -49,10 +48,15 @@ export default function ListingCard({ listing, index = 0 }) {
     >
       <Link
         to={`/marketplace/${listing._id}`}
-        className="relative block h-full flex flex-col bg-[#14121f] border border-white/10 hover:border-white/25 rounded-2xl overflow-hidden transition-all duration-300"
-        style={{ boxShadow: "0 8px 24px -12px rgba(0,0,0,0.6)" }}
+        className={`relative block h-full flex flex-col bg-[#14121f] border rounded-2xl overflow-hidden transition-all duration-300 ${
+          isSpotlight ? "border-purple-500/50 hover:border-purple-400" : "border-white/10 hover:border-white/25"
+        }`}
+        style={{
+          boxShadow: isSpotlight
+            ? "0 0 24px -6px rgba(139,92,246,0.4)"
+            : "0 8px 24px -12px rgba(0,0,0,0.6)",
+        }}
       >
-        {/* gradient overlay on hover */}
         <div
           className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
           style={{ background: `radial-gradient(circle at 50% 0%, ${cat.glow}, transparent 60%)` }}
@@ -67,7 +71,6 @@ export default function ListingCard({ listing, index = 0 }) {
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
             />
           ) : coverIsPdf ? (
-            // Only a PDF was uploaded, no image cover
             <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-red-400/60">
               <FileText size={48} />
               <span className="text-[10px] font-bold uppercase tracking-widest">PDF attached</span>
@@ -83,6 +86,13 @@ export default function ListingCard({ listing, index = 0 }) {
             {cat.label}
           </span>
 
+          {/* spotlight pill */}
+          {isSpotlight && (
+            <span className="absolute top-3 right-3 inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-[0_0_12px_rgba(139,92,246,0.5)]">
+              <Star size={9} fill="currentColor" /> Spotlight
+            </span>
+          )}
+
           {/* PDF badge */}
           {hasPdf && (
             <span className="absolute bottom-3 left-3 flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded-full bg-red-500/20 border border-red-500/40 text-red-200 backdrop-blur-md">
@@ -92,7 +102,7 @@ export default function ListingCard({ listing, index = 0 }) {
 
           {/* status pill */}
           {statusBadge && (
-            <span className="absolute top-3 right-3 text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full border border-red-500/40 bg-red-500/20 text-red-200 backdrop-blur-md">
+            <span className="absolute bottom-3 right-3 text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full border border-red-500/40 bg-red-500/20 text-red-200 backdrop-blur-md">
               {listing.status}
             </span>
           )}

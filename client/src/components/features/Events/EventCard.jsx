@@ -1,7 +1,7 @@
 // client/src/components/features/Events/EventCard.jsx
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { MapPin, Calendar, Users, Ticket, Zap, ArrowUpRight } from "lucide-react";
+import { MapPin, Calendar, Users, Ticket, Zap, ArrowUpRight, Star } from "lucide-react";
 
 const TAG_STYLES = {
   Tech: "bg-sky-100 text-sky-800 border-sky-200",
@@ -30,6 +30,8 @@ export default function EventCard({ event, index = 0 }) {
   const isClosing = deadlineDays !== null && deadlineDays >= 0 && deadlineDays <= 3;
   const isEnded = deadlineDays !== null && deadlineDays < 0;
   const isLive = daysUntil(event.date) === 0;
+  const isSpotlight =
+    event.organizerId?.spotlightUntil && new Date(event.organizerId.spotlightUntil) > new Date();
 
   return (
     <motion.div
@@ -43,7 +45,11 @@ export default function EventCard({ event, index = 0 }) {
     >
       <Link
         to={`/events/${event._id}`}
-        className="flex flex-col sm:flex-row bg-white rounded-2xl overflow-hidden border border-stone-200/80 hover:border-stone-300 transition-all shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_32px_-12px_rgba(0,0,0,0.12)]"
+        className={`flex flex-col sm:flex-row bg-white rounded-2xl overflow-hidden border transition-all ${
+          isSpotlight
+            ? "border-purple-300 hover:border-purple-400 shadow-[0_8px_32px_-12px_rgba(139,92,246,0.25)]"
+            : "border-stone-200/80 hover:border-stone-300 shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_32px_-12px_rgba(0,0,0,0.12)]"
+        }`}
       >
         {/* Banner */}
         <div className="relative sm:w-64 shrink-0 h-44 sm:h-auto overflow-hidden bg-stone-100">
@@ -71,6 +77,11 @@ export default function EventCard({ event, index = 0 }) {
           {isEnded && (
             <span className="absolute top-3 left-3 text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-stone-700 text-white">
               Ended
+            </span>
+          )}
+          {isSpotlight && (
+            <span className="absolute bottom-3 right-3 inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-[0_0_12px_rgba(139,92,246,0.5)]">
+              <Star size={9} fill="currentColor" /> Spotlight
             </span>
           )}
         </div>

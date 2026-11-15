@@ -51,12 +51,21 @@ export const getAllEvents = async (req, res) => {
     if (mode && ["offline", "online", "hybrid"].includes(mode)) filter.mode = mode;
     if (search) filter.$text = { $search: search };
 
-    const sortBy = sort === "date-desc" ? { date: -1 } : { date: 1 };
+    const now = new Date();
 
     const events = await Event.find(filter)
-      .populate("organizerId", "name university")
-      .sort(sortBy)
+      .populate("organizerId", "name university spotlightUntil")
+      .sort({ date: 1 })
       .limit(100);
+
+    // Spotlight organizers' events float to top
+    events.sort((a, b) => {
+      const aSpot = a.organizerId?.spotlightUntil && a.organizerId.spotlightUntil > now ? 1 : 0;
+      const bSpot = b.organizerId?.spotlightUntil && b.organizerId.spotlightUntil > now ? 1 : 0;
+      if (aSpot !== bSpot) return bSpot - aSpot;
+      if (sort === "date-desc") return new Date(b.date) - new Date(a.date);
+      return new Date(a.date) - new Date(b.date);
+    });
 
     res.json(events);
   } catch (error) {

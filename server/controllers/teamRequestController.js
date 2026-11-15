@@ -40,9 +40,18 @@ export const getTeamRequestsForEvent = async (req, res) => {
     const filter = { eventId, status: "open" };
     if (skill) filter.skillTags = skill;
 
+    const now = new Date();
+
     const trs = await TeamRequest.find(filter)
-      .populate("posterId", "name university trustScore")
+      .populate("posterId", "name university trustScore spotlightUntil")
       .sort({ createdAt: -1 });
+
+    // Spotlight posters' requests float to top
+    trs.sort((a, b) => {
+      const aSpot = a.posterId?.spotlightUntil && a.posterId.spotlightUntil > now ? 1 : 0;
+      const bSpot = b.posterId?.spotlightUntil && b.posterId.spotlightUntil > now ? 1 : 0;
+      return bSpot - aSpot;
+    });
 
     res.json(trs);
   } catch (error) {
@@ -53,7 +62,7 @@ export const getTeamRequestsForEvent = async (req, res) => {
 export const getTeamRequestById = async (req, res) => {
   try {
     const tr = await TeamRequest.findById(req.params.id)
-      .populate("posterId", "name university trustScore")
+      .populate("posterId", "name university trustScore spotlightUntil")
       .populate("eventId", "title date venue")
       .populate("applicants.userId", "name university");
     if (!tr) return res.status(404).json({ message: "Team request not found" });
@@ -134,7 +143,7 @@ export const applyToTeam = async (req, res) => {
 export const decideApplicant = async (req, res) => {
   try {
     const { userId } = req.params;
-    const { decision } = req.body; // "accepted" | "rejected"
+    const { decision } = req.body;
 
     if (!["accepted", "rejected"].includes(decision)) {
       return res.status(400).json({ message: "decision must be accepted or rejected" });

@@ -30,6 +30,9 @@ const Connect = lazy(() => import("./pages/Connect"));
 const HelpFeed = lazy(() => import("./pages/HelpFeed"));
 const CreateHelpPost = lazy(() => import("./pages/CreateHelpPost"));
 const HelpDetail = lazy(() => import("./pages/HelpDetail"));
+const Spotlight = lazy(() => import("./pages/Spotlight"));
+const SpotlightClaim = lazy(() => import("./pages/SpotlightClaim"));
+const AdminSpotlight = lazy(() => import("./pages/AdminSpotlight"));
 
 const BOOT_MS = 2200;
 
@@ -91,7 +94,7 @@ export default function App() {
           <Route path="/auth" element={<AuthPage />} />
 
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-
+          
           {/* Marketplace */}
           <Route path="/marketplace" element={<Marketplace />} />
           <Route path="/marketplace/new" element={<ProtectedRoute><CreateListing /></ProtectedRoute>} />
@@ -126,6 +129,11 @@ export default function App() {
           <Route path="/help" element={<ProtectedRoute><HelpFeed /></ProtectedRoute>} />
           <Route path="/help/new" element={<ProtectedRoute><CreateHelpPost /></ProtectedRoute>} />
           <Route path="/help/:id" element={<ProtectedRoute><HelpDetail /></ProtectedRoute>} />
+
+          <Route path="/spotlight" element={<Spotlight />} />
+          <Route path="/spotlight/claim" element={<ProtectedRoute><SpotlightClaim /></ProtectedRoute>} />
+          <Route path="/dashboard/spotlight" element={<ProtectedRoute><AdminSpotlight /></ProtectedRoute>} />
+
 
 
           <Route path="*" element={<Navigate to="/" replace />} />

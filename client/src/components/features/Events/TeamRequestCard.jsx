@@ -1,7 +1,7 @@
 // client/src/components/features/Events/TeamRequestCard.jsx
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowUpRight, Sparkles, Building2 } from "lucide-react";
+import { ArrowUpRight, Sparkles, Building2, Star } from "lucide-react";
 
 const cardVariants = {
   hidden: { opacity: 0, y: 16 },
@@ -11,6 +11,7 @@ const cardVariants = {
 export default function TeamRequestCard({ tr, index = 0 }) {
   const poster = tr.posterId;
   const spotsLeft = tr.spotsAvailable - (tr.applicants?.filter((a) => a.status === "accepted").length || 0);
+  const isSpotlight = poster?.spotlightUntil && new Date(poster.spotlightUntil) > new Date();
 
   return (
     <motion.div
@@ -23,13 +24,22 @@ export default function TeamRequestCard({ tr, index = 0 }) {
     >
       <Link
         to={`/team-requests/${tr._id}`}
-        className="group block bg-indigo-50/60 hover:bg-indigo-50 border border-indigo-200/70 hover:border-indigo-300 rounded-2xl p-5 transition-all"
+        className={`group block border rounded-2xl p-5 transition-all ${
+          isSpotlight
+            ? "bg-gradient-to-br from-purple-50/80 to-indigo-50/60 border-purple-300 hover:border-purple-400 shadow-[0_4px_24px_-8px_rgba(139,92,246,0.3)]"
+            : "bg-indigo-50/60 hover:bg-indigo-50 border-indigo-200/70 hover:border-indigo-300"
+        }`}
       >
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex flex-wrap items-center gap-2 min-w-0">
             <span className="text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded-full bg-indigo-600 text-white">
               Looking for teammates
             </span>
+            {isSpotlight && (
+              <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-[0_0_12px_rgba(139,92,246,0.5)]">
+                <Star size={9} fill="currentColor" /> Spotlight
+              </span>
+            )}
             {tr.department && tr.department !== "Any" && (
               <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-full bg-white text-indigo-700 border border-indigo-200">
                 <Building2 size={10} /> {tr.department}

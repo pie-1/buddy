@@ -3,7 +3,11 @@ import Event from "../models/Event.js";
 
 export const createEvent = async (req, res) => {
   try {
-    const { title, description, date, endDate, venue, location, department, college, capacity, coverImage } = req.body;
+    const {
+      title, description, date, endDate, registrationDeadline, venue, mode,
+      location, tags, cost, registrationLink, organizerName,
+      department, college, capacity, coverImage,
+    } = req.body;
 
     if (!title || !description || !date || !venue) {
       return res.status(400).json({ message: "title, description, date, and venue are required" });
@@ -12,14 +16,20 @@ export const createEvent = async (req, res) => {
     const event = await Event.create({
       title,
       description,
+      coverImage: coverImage || null,
       date,
       endDate: endDate || null,
+      registrationDeadline: registrationDeadline || null,
       venue,
+      mode: mode || "offline",
       location: location || {},
+      tags: tags || [],
+      cost: cost || "Free",
+      registrationLink: registrationLink || null,
+      organizerName: organizerName || "",
       department: department || "All",
       college: college || "All",
       capacity: capacity || null,
-      coverImage: coverImage || null,
       organizerId: req.user._id,
     });
 
@@ -31,18 +41,14 @@ export const createEvent = async (req, res) => {
 
 export const getAllEvents = async (req, res) => {
   try {
-    const { department, college, status, search, sort } = req.query;
+    const { tag, mode, status, search, sort } = req.query;
     const filter = {};
 
     if (status) filter.status = status;
     else filter.status = { $in: ["upcoming", "ongoing"] };
 
-    if (department && department !== "All") {
-      filter.department = { $in: ["All", department] };
-    }
-    if (college && college !== "All") {
-      filter.college = { $in: ["All", college] };
-    }
+    if (tag) filter.tags = tag;
+    if (mode && ["offline", "online", "hybrid"].includes(mode)) filter.mode = mode;
     if (search) filter.$text = { $search: search };
 
     const sortBy = sort === "date-desc" ? { date: -1 } : { date: 1 };
@@ -79,7 +85,11 @@ export const updateEvent = async (req, res) => {
       return res.status(403).json({ message: "Not authorized to edit this event" });
     }
 
-    const editable = ["title", "description", "date", "endDate", "venue", "location", "department", "college", "capacity", "coverImage", "status"];
+    const editable = [
+      "title", "description", "date", "endDate", "registrationDeadline",
+      "venue", "mode", "location", "tags", "cost", "registrationLink",
+      "organizerName", "department", "college", "capacity", "coverImage", "status",
+    ];
     editable.forEach((field) => {
       if (req.body[field] !== undefined) event[field] = req.body[field];
     });
@@ -109,25 +119,23 @@ export const deleteEvent = async (req, res) => {
 
 export const rsvpEvent = async (req, res) => {
   try {
-    const { status } = req.body; // "going" | "interested"
+    const { status } = req.body;
     const event = await Event.findById(req.params.id);
     if (!event) return res.status(404).json({ message: "Event not found" });
 
     const existing = event.rsvps.find((r) => r.userId.toString() === req.user._id.toString());
 
     if (existing) {
-      // Un-RSVP if same status clicked again
       if (existing.status === status) {
         event.rsvps = event.rsvps.filter((r) => r.userId.toString() !== req.user._id.toString());
         await event.save();
         return res.json({ message: "RSVP removed", rsvp: null, count: event.rsvps.length });
       }
-      // Otherwise, switch status
       existing.status = status;
       existing.rsvpAt = new Date();
     } else {
-      // Check capacity
-      if (event.capacity && status === "going" && event.rsvps.filter((r) => r.status === "going").length >= event.capacity) {
+      if (event.capacity && status === "going" &&
+          event.rsvps.filter((r) => r.status === "going").length >= event.capacity) {
         return res.status(400).json({ message: "Event is at full capacity" });
       }
       event.rsvps.push({ userId: req.user._id, status });

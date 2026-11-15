@@ -48,3 +48,8 @@ export const uploadFiles = async (files) => {
   const { data } = await api.post("/upload/images", formData);
   return data.files; // [{url, thumb, isPdf}]
 };
+
+export const uploadAvatar = async (file) => {
+  const results = await uploadFiles([file]);
+  return results[0]?.url || null;
+};

@@ -10,7 +10,11 @@ import roommateRoutes from "./routes/roommateRoutes.js";
 import eventRoutes from "./routes/eventRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
+import teamRequestRoutes from "./routes/teamRequestRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
 import { initSocket } from "./sockets/chatSocket.js";
+import helpRoutes from "./routes/helpRoutes.js";
+
 
 dotenv.config();
 connectDB();
@@ -25,6 +29,9 @@ app.use("/api/roommates", roommateRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/upload", uploadRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api", teamRequestRoutes);
+app.use("/api/help", helpRoutes);
 app.get("/api/health", (req, res) => res.json({ status: "success" }));
 
 app.use((err, req, res, next) => {

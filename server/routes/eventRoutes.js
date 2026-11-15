@@ -1,12 +1,7 @@
 // server/routes/eventRoutes.js
 import express from "express";
 import {
-  createEvent,
-  getAllEvents,
-  getEventById,
-  updateEvent,
-  deleteEvent,
-  rsvpEvent,
+  createEvent, getAllEvents, getEventById, updateEvent, deleteEvent, rsvpEvent,
 } from "../controllers/eventController.js";
 import { protect } from "../middlewares/authMiddleware.js";
 

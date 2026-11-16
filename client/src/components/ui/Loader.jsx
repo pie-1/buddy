@@ -2,12 +2,15 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
-const DEFAULT_STEPS = ["Verifying .edu.np", "Finding your circle", "Unlocking campus"];
+const DEFAULT_STEPS = [
+  "Checking your .edu.np",
+  "Borrowing a drafter",
+  "Hunting past papers",
+  "Finding a hackathon team",
+  "Opening your campus"
+];
 
-// one loop: scan line sweeps down and the dark pass is revealed behind it, holds, then wipes away
 const LOOP = { duration: 2.8, repeat: Infinity, times: [0, 0.5, 0.8, 1], ease: "easeInOut" };
-
-// one organic contour, drawn 6 times at different sizes
 const BLOB = "M120 20 C170 18 215 55 218 105 C221 160 170 205 115 202 C60 199 22 150 25 100 C28 55 70 22 120 20 Z";
 
 export function Loader({ fullScreen = false, steps = DEFAULT_STEPS }) {
@@ -15,15 +18,15 @@ export function Loader({ fullScreen = false, steps = DEFAULT_STEPS }) {
   const [step, setStep] = useState(0);
 
   useEffect(() => {
-    const id = setInterval(() => setStep((s) => (s + 1) % steps.length), 1400);
+    // Full-screen boot lasts ~2.8s, so every line gets ~0.56s. Inline loaders can breathe more.
+    const id = setInterval(() => setStep((s) => (s + 1) % steps.length), fullScreen ? 560 : 1800);
     return () => clearInterval(id);
-  }, [steps.length]);
+  }, [steps.length, fullScreen]);
 
-  const L = fullScreen ? 320 : 48; // string length (px)
+  const L = fullScreen ? 320 : 48;
 
   const content = (
     <div className="relative z-10 flex flex-col items-center">
-      {/* hanging ID card: swings like a pendulum from the top of its string (still, for reduced motion) */}
       <motion.div
         className="relative w-[150px] h-[210px]"
         style={{ transformOrigin: `50% -${L}px` }}
@@ -32,29 +35,29 @@ export function Loader({ fullScreen = false, steps = DEFAULT_STEPS }) {
         transition={{ duration: 2.2, repeat: Infinity, repeatType: "mirror", ease: "easeInOut" }}
       >
         <div
-          className="absolute bottom-full left-1/2 -translate-x-1/2 w-[2px] bg-gradient-to-b from-transparent via-gray-300 to-gray-400"
+          className="absolute bottom-full left-1/2 -translate-x-1/2 w-[2px] bg-gradient-to-b from-transparent via-stone-300 to-stone-400"
           style={{ height: L }}
         />
-        <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-30 w-5 h-6 rounded-md bg-gray-200 border border-gray-300 shadow-sm grid place-items-center">
-          <span className="w-2 h-2 rounded-full bg-gray-400" />
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-30 w-5 h-6 rounded-md bg-stone-200 border border-stone-300 shadow-sm grid place-items-center">
+          <span className="w-2 h-2 rounded-full bg-stone-400" />
         </div>
 
-        {/* plain ID */}
+        {/* Plain ID */}
         <div className="absolute inset-0 rounded-2xl bg-[#f4f3ee] border border-[#d6d0c4] shadow-[0_24px_40px_-14px_rgba(0,0,0,0.2)] p-3 pt-5 flex flex-col items-center z-10">
-          <span className="text-[7px] tracking-[0.25em] font-bold text-gray-700">COLLEGEBUDDY</span>
+          <span className="text-[7px] tracking-[0.25em] font-bold text-stone-600">COLLEGEBUDDY</span>
           <div className="mt-3 w-14 h-16 rounded-md bg-[#e4e4e7] border border-[#c4bdaf] grid place-items-center">
-            <svg className="w-7 h-7 text-gray-400" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+            <svg className="w-7 h-7 text-stone-400" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
               <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
             </svg>
           </div>
           <div className="mt-3 w-full flex flex-col items-center gap-1.5">
-            <div className="h-1.5 w-3/4 rounded bg-gray-300" />
-            <div className="h-1.5 w-1/2 rounded bg-gray-200" />
+            <div className="h-1.5 w-3/4 rounded bg-stone-300" />
+            <div className="h-1.5 w-1/2 rounded bg-stone-200" />
           </div>
-          <div className="mt-auto w-full h-5 rounded-sm bg-[repeating-linear-gradient(90deg,#9ca3af_0_2px,transparent_2px_4px)] opacity-60" />
+          <div className="mt-auto w-full h-5 rounded-sm bg-[repeating-linear-gradient(90deg,#a8a29e_0_2px,transparent_2px_4px)] opacity-60" />
         </div>
 
-        {/* dark pass, revealed top-to-bottom by the scan */}
+        {/* Dark Pass Reveal */}
         <motion.div
           className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#1e1b4b] to-[#09090b] border border-indigo-500/40 p-3 pt-5 flex flex-col items-center z-20"
           initial={{ clipPath: "inset(0% 0% 100% 0%)" }}
@@ -73,7 +76,7 @@ export function Loader({ fullScreen = false, steps = DEFAULT_STEPS }) {
           <div className="mt-auto w-full h-5 rounded-sm bg-[repeating-linear-gradient(90deg,#a5b4fc_0_2px,transparent_2px_4px)] opacity-70" />
         </motion.div>
 
-        {/* scan line, rides the edge of the reveal */}
+        {/* Scan line */}
         <motion.div
           className="absolute -left-2 -right-2 h-[2px] rounded-full z-30 bg-gradient-to-r from-transparent via-indigo-500 to-transparent shadow-[0_0_16px_4px_rgba(99,102,241,0.45)]"
           initial={{ top: "0%", opacity: 1 }}
@@ -82,7 +85,6 @@ export function Loader({ fullScreen = false, steps = DEFAULT_STEPS }) {
         />
       </motion.div>
 
-      {/* status text, step dots and an indeterminate progress sliver */}
       <div className="mt-12 flex flex-col items-center gap-3">
         <div className="h-4 overflow-hidden">
           <AnimatePresence mode="wait">
@@ -92,7 +94,7 @@ export function Loader({ fullScreen = false, steps = DEFAULT_STEPS }) {
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -10, opacity: 0 }}
               transition={{ duration: 0.25 }}
-              className="text-[11px] text-indigo-600 tracking-[0.2em] uppercase font-bold"
+              className="text-[10px] text-indigo-600 tracking-[0.2em] uppercase font-bold"
             >
               {steps[step]}
             </motion.p>
@@ -103,13 +105,6 @@ export function Loader({ fullScreen = false, steps = DEFAULT_STEPS }) {
             <span key={i} className={`h-1.5 rounded-full transition-all duration-300 ${i === step ? "w-5 bg-indigo-500" : "w-1.5 bg-indigo-200"}`} />
           ))}
         </div>
-        <div className="mt-1 h-[2px] w-36 rounded-full bg-indigo-100 overflow-hidden" aria-hidden>
-          <motion.div
-            className="h-full w-1/3 rounded-full bg-indigo-500"
-            animate={{ x: ["-100%", "300%"] }}
-            transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
-          />
-        </div>
       </div>
       <span className="sr-only">Loading CollegeBuddy</span>
     </div>
@@ -118,14 +113,10 @@ export function Loader({ fullScreen = false, steps = DEFAULT_STEPS }) {
   if (fullScreen) {
     return (
       <div role="status" aria-live="polite" className="fixed inset-0 z-[100] flex items-center justify-center bg-[#fafaf8] overflow-hidden">
-        {/* contour rings that draw themselves in, then slowly breathe */}
         <svg
           viewBox="-100 -90 440 400"
           className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(120vw,1100px)] pointer-events-none overflow-visible"
-          style={{
-            maskImage: "radial-gradient(circle, #000 25%, transparent 72%)",
-            WebkitMaskImage: "radial-gradient(circle, #000 25%, transparent 72%)",
-          }}
+          style={{ maskImage: "radial-gradient(circle, #000 25%, transparent 72%)", WebkitMaskImage: "radial-gradient(circle, #000 25%, transparent 72%)" }}
           aria-hidden
         >
           {[0.3, 0.5, 0.7, 0.9, 1.1, 1.3].map((s, i) => (

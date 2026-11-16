@@ -27,11 +27,15 @@ export default function Chat() {
   const [typingFrom, setTypingFrom] = useState(null);
   const [marking, setMarking] = useState(false);
 
-  // Fetch inbox on load
-  useEffect(() => {
+  // Fetch inbox
+  const loadInbox = () => {
     fetchMyConversations()
       .then(setConversations)
       .finally(() => setLoadingList(false));
+  };
+
+  useEffect(() => {
+    loadInbox();
   }, []);
 
   // Fetch active thread
@@ -50,7 +54,7 @@ export default function Chat() {
       .finally(() => setLoadingThread(false));
   }, [activeId]);
 
-  // Join the conversation room via socket
+  // Socket rooms
   useEffect(() => {
     if (!socket || !activeId) return;
     socket.emit("join-conversation", { conversationId: activeId });
@@ -64,9 +68,24 @@ export default function Chat() {
     const onNewMessage = (msg) => {
       if (msg.conversationId === activeId) {
         setMessages((prev) => {
-          // dedupe by _id (optimistic + server-confirmed)
           if (prev.some((m) => m._id === msg._id)) return prev;
           return [...prev, msg];
+        });
+        
+        // Update inbox preview
+        setConversations(prev => {
+          const updated = prev.map(c => {
+            if (c._id === activeId) {
+              return { ...c, lastMessage: { text: msg.text, senderId: msg.senderId, at: new Date() } };
+            }
+            return c;
+          });
+          // Move active to top
+          return updated.sort((a,b) => {
+            if (a._id === activeId) return -1;
+            if (b._id === activeId) return 1;
+            return new Date(b.lastMessage?.at || b.updatedAt) - new Date(a.lastMessage?.at || a.updatedAt);
+          });
         });
       }
     };
@@ -76,11 +95,16 @@ export default function Chat() {
       setTypingFrom(isTyping ? userId : null);
     };
 
+    const onConvoUpdated = () => loadInbox(); // refresh if new message comes to a different thread
+
     socket.on("new-message", onNewMessage);
     socket.on("user-typing", onTyping);
+    socket.on("conversation-updated", onConvoUpdated);
+    
     return () => {
       socket.off("new-message", onNewMessage);
       socket.off("user-typing", onTyping);
+      socket.off("conversation-updated", onConvoUpdated);
     };
   }, [socket, activeId, user?._id]);
 
@@ -100,7 +124,13 @@ export default function Chat() {
     socket.emit(
       "send-message",
       { conversationId: activeId, systemEvent: "marked-done" },
-      () => setMarking(false)
+      () => {
+        setMarking(false);
+        // Optimitically update header so button disappears
+        if (activeConvo) {
+          setActiveConvo(prev => ({...prev, lastMessage: { text: "[marked-done]" }}));
+        }
+      }
     );
   };
 
@@ -139,8 +169,12 @@ export default function Chat() {
                       active ? "bg-indigo-500/10 border-l-2 border-l-indigo-500" : "hover:bg-white/[0.03]"
                     }`}
                   >
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 grid place-items-center text-white text-xs font-bold shrink-0">
-                      {other?.name?.[0]?.toUpperCase() || "?"}
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 grid place-items-center text-white text-xs font-bold shrink-0 overflow-hidden">
+                      {other?.avatar ? (
+                        <img src={other.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                      ) : (
+                        other?.name?.[0]?.toUpperCase() || "?"
+                      )}
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="text-sm font-bold text-white truncate">{other?.name || "Unknown"}</div>

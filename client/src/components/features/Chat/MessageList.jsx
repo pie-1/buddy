@@ -23,15 +23,19 @@ function Bubble({ msg, isMine }) {
       className={`flex gap-2 ${isMine ? "justify-end" : "justify-start"}`}
     >
       {!isMine && (
-        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 grid place-items-center text-white text-[10px] font-bold shrink-0 mt-auto">
-          {msg.senderId?.name?.[0]?.toUpperCase() || "?"}
+        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 grid place-items-center text-white text-[10px] font-bold shrink-0 mt-auto overflow-hidden">
+          {msg.senderId?.avatar ? (
+            <img src={msg.senderId.avatar} alt="Avatar" className="w-full h-full object-cover" />
+          ) : (
+            msg.senderId?.name?.[0]?.toUpperCase() || "?"
+          )}
         </div>
       )}
       <div
-        className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+        className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed shadow-sm ${
           isMine
             ? "bg-indigo-600 text-white rounded-br-sm"
-            : "bg-white/[0.06] text-gray-100 border border-white/10 rounded-bl-sm"
+            : "bg-[#1e1b2e] text-gray-100 border border-white/5 rounded-bl-sm"
         }`}
       >
         <p className="whitespace-pre-wrap break-words">{msg.text}</p>
@@ -52,7 +56,7 @@ export default function MessageList({ messages, currentUserId }) {
   }, [messages.length]);
 
   return (
-    <div className="flex-1 overflow-y-auto p-5 space-y-3">
+    <div className="flex-1 overflow-y-auto p-5 space-y-3 bg-[#0f0e1a]">
       {messages.length === 0 && (
         <div className="h-full flex items-center justify-center text-center text-gray-500 text-sm">
           No messages yet. Say hi 👋

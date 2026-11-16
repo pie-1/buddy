@@ -2,7 +2,6 @@
 import Conversation from "../models/Conversation.js";
 import Message from "../models/Message.js";
 
-// Robust participant check: handles populated docs, ObjectIds, and strings
 function isParticipant(conversation, userId) {
   if (!userId) return false;
   const target = userId.toString();
@@ -23,12 +22,21 @@ export const startConversation = async (req, res) => {
       return res.status(400).json({ message: "Cannot start a conversation with yourself" });
     }
 
-    const existing = await Conversation.findOne({
-      contextType,
-      contextId,
+    // Industrial Logic: For "direct" chats, don't care about contextId, just check if they talk at all.
+    // For contextual (listing/event), ensure we find the specific thread.
+    const query = {
       participants: { $all: [req.user._id, recipientId], $size: 2 },
-    });
+      status: "open",
+    };
 
+    if (contextType === "direct") {
+      query.contextType = "direct";
+    } else {
+      query.contextType = contextType;
+      query.contextId = contextId;
+    }
+
+    const existing = await Conversation.findOne(query);
     if (existing) return res.json(existing);
 
     const conversation = await Conversation.create({
@@ -45,23 +53,33 @@ export const startConversation = async (req, res) => {
 
 export const getMyConversations = async (req, res) => {
   try {
-    // Guard: if req.user is missing, return 401, not all conversations
-    if (!req.user?._id) {
-      return res.status(401).json({ message: "Not authorized" });
-    }
+    if (!req.user?._id) return res.status(401).json({ message: "Not authorized" });
 
     const conversations = await Conversation.find({
       participants: req.user._id,
       status: "open",
     })
-      .populate("participants", "name university trustScore")
+      .populate("participants", "name university trustScore avatar")
       .sort({ updatedAt: -1 })
       .limit(100);
 
-    // Defense in depth: filter again in JS
-    const mine = conversations.filter((c) => isParticipant(c, req.user._id));
+    // Deduplicate in memory just in case the DB has old duplicates
+    // Group by the "other" user's ID. Keep the most recently updated one.
+    const uniqueMap = new Map();
+    
+    conversations.forEach(c => {
+      const other = c.participants.find(p => p._id.toString() !== req.user._id.toString());
+      if (!other) return;
+      const otherId = other._id.toString();
+      
+      // If we haven't seen this user yet, OR if this conversation is newer, keep it.
+      if (!uniqueMap.has(otherId) || uniqueMap.get(otherId).updatedAt < c.updatedAt) {
+        uniqueMap.set(otherId, c);
+      }
+    });
 
-    res.json(mine);
+    const deduplicated = Array.from(uniqueMap.values()).sort((a,b) => b.updatedAt - a.updatedAt);
+    res.json(deduplicated);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -70,7 +88,7 @@ export const getMyConversations = async (req, res) => {
 export const getConversationById = async (req, res) => {
   try {
     const conversation = await Conversation.findById(req.params.id)
-      .populate("participants", "name university trustScore");
+      .populate("participants", "name university trustScore avatar");
     if (!conversation) return res.status(404).json({ message: "Conversation not found" });
 
     if (!isParticipant(conversation, req.user._id)) {
@@ -79,7 +97,7 @@ export const getConversationById = async (req, res) => {
 
     const limit = Number(req.query.limit) || 50;
     const messages = await Message.find({ conversationId: conversation._id })
-      .populate("senderId", "name")
+      .populate("senderId", "name avatar")
       .sort({ createdAt: -1 })
       .limit(limit);
 
@@ -99,9 +117,8 @@ export const sendMessage = async (req, res) => {
 
     const conversation = await Conversation.findById(req.params.id);
     if (!conversation) return res.status(404).json({ message: "Conversation not found" });
-
     if (!isParticipant(conversation, req.user._id)) {
-      return res.status(403).json({ message: "Not a participant in this conversation" });
+      return res.status(403).json({ message: "Not a participant" });
     }
 
     const message = await Message.create({
@@ -119,7 +136,7 @@ export const sendMessage = async (req, res) => {
     };
     await conversation.save();
 
-    const populated = await message.populate("senderId", "name");
+    const populated = await message.populate("senderId", "name avatar");
     res.status(201).json(populated);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -130,9 +147,8 @@ export const archiveConversation = async (req, res) => {
   try {
     const conversation = await Conversation.findById(req.params.id);
     if (!conversation) return res.status(404).json({ message: "Conversation not found" });
-
     if (!isParticipant(conversation, req.user._id)) {
-      return res.status(403).json({ message: "Not a participant in this conversation" });
+      return res.status(403).json({ message: "Not a participant" });
     }
 
     conversation.status = "archived";

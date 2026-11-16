@@ -5,12 +5,12 @@ import { Reveal, MaskLine, EASE } from "./Reveal";
 import { HangingNumber } from "./HangingNumber";
 
 const CHAT_LIST = [
-  "CSE Official 2024-28",
-  "CSE UNOFFICIAL ☠️",
-  "Fest 2026 OFFICIAL",
-  "Fest 2026 (REAL one)",
-  "Notes Xchange [NO SPAM]",
-  "hostel H4 mess updates",
+  "Need a drafter for 1 sem 😭",
+  "Dai, DSA past papers??",
+  "Room khali near campus gate",
+  "Hackathon team: need 1 coder",
+  "Any CS senior to guide?",
+  "Lab manual PDF, someone?",
 ];
 
 export function ProblemFlow() {
@@ -22,12 +22,13 @@ export function ProblemFlow() {
 
   return (
     <div ref={ref} data-nav-theme="dark" className="relative z-30 bg-[#09090b] text-white overflow-hidden pb-32">
+      {/* SECTION 1: The Chat Graveyard */}
       <section className="max-w-6xl mx-auto px-6 pt-32 pb-48 relative">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
           <motion.div style={{ y: y1 }} className="relative flex justify-center md:justify-start order-2 md:order-1">
             <Reveal y={50} className="relative w-[300px] bg-[#1c1a28] rounded-3xl border border-white/10 p-5 shadow-2xl z-10">
               <div className="flex justify-between items-center mb-4 border-b border-white/10 pb-4">
-                <span className="text-sm font-bold text-white">Chats</span>
+                <span className="text-sm font-bold text-white">Campus Groups</span>
                 <span className="text-xs text-green-400">74 muted</span>
               </div>
               <div className="flex flex-col gap-4">
@@ -52,16 +53,17 @@ export function ProblemFlow() {
             <h2 className="text-5xl md:text-7xl font-sans font-black leading-[1.05] tracking-tighter relative z-10">
               <MaskLine>ALL THE CHATS.</MaskLine>
               <MaskLine delay={0.1}>NONE OF THE</MaskLine>
-              <MaskLine delay={0.2}>PLANS.</MaskLine>
+              <MaskLine delay={0.2}>ANSWERS.</MaskLine>
               <MaskLine delay={0.3} className="text-[#a3e635] mt-2">CLASSIC.</MaskLine>
             </h2>
             <Reveal as="p" delay={0.5} className="text-gray-400 mt-6 max-w-md relative z-10">
-              74 muted groups, and the real plans still happen without you.
+              Need a drafter for one sem? Past papers? A flatmate? You're in 74 groups and still can't find one answer.
             </Reveal>
           </div>
         </div>
       </section>
 
+      {/* SECTION 2: The Silence */}
       <section className="max-w-6xl mx-auto px-6 pt-16 pb-48 relative">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
           <div className="relative">
@@ -72,14 +74,14 @@ export function ProblemFlow() {
               <MaskLine delay={0.2} className="text-[#22d3ee] mt-2">EXACTLY.</MaskLine>
             </h2>
             <Reveal as="p" delay={0.4} className="text-gray-400 mt-6 max-w-md relative z-10">
-              You can't ask a stranger for help. So nobody ever asks.
+              Asking a stranger feels awkward. Finding a teammate from another department feels impossible. So most people just stay quiet.
             </Reveal>
           </div>
 
           <motion.div style={{ y: y2 }} className="relative flex justify-center md:justify-end">
             <Reveal y={50} className="relative w-[300px] bg-[#0f0e1a] rounded-3xl border border-white/10 p-5 shadow-2xl flex flex-col items-center justify-center min-h-[200px] z-10">
               <motion.div initial={reduce ? false : { opacity: 0, y: 12, scale: 0.96 }} whileInView={{ opacity: 1, y: 0, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.5, ease: EASE }} style={{ transformOrigin: "100% 100%" }} className="bg-[#6366f1] text-white text-[11px] p-3 rounded-2xl rounded-tr-sm self-end max-w-[85%] mb-6">
-                anyone up for library tonight? exam in 2 days 🌙
+                Need a designer for our hackathon team. Anyone? 🙏
               </motion.div>
               <motion.div initial={reduce ? false : { opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ duration: 1.2, delay: 1.6 }} className="text-center text-gray-500">
                 <div className="w-8 h-8 rounded-full bg-gray-800 grid place-items-center mx-auto mb-2 text-xs">👤</div>

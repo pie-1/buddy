@@ -2,77 +2,101 @@
 import { useEffect, useRef, useState, useContext } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { FaGithub, FaStar, FaRegStar } from "react-icons/fa";
+import { FaGithub, FaStar } from "react-icons/fa";
 import { FiUser, FiUsers, FiChevronDown, FiStar } from "react-icons/fi";
 import { AuthContext } from "../../context/AuthContext";
 
 const GITHUB_REPO = "https://github.com/pie-1/buddy";
-const STORAGE_KEY = "cb:gh-starred";
-const BASE_STARS = 47;
+const GITHUB_API = "https://api.github.com/repos/pie-1/buddy";
+const STARS_CACHE = "cb:gh-stars";
 
-const FEATURE_LINKS = [
+// Browsing is public: guests can look around, and sign up when they want to act.
+const PUBLIC_LINKS = [
   { label: "Marketplace", to: "/marketplace" },
-  { label: "Chat", to: "/chat" },
   { label: "Roommates", to: "/roommates" },
   { label: "Events", to: "/events" },
 ];
+const MEMBER_LINKS = [
+  { label: "Dashboard", to: "/dashboard" },
+  { label: "Chat", to: "/chat" },
+];
+const DOCS_LINK = { label: "Docs", to: "/docs" };
+
+// Real star count from GitHub (cached for the session). If the repo is private or the call fails, the number is just hidden.
+function useStars() {
+  const [stars, setStars] = useState(() => {
+    try { return JSON.parse(sessionStorage.getItem(STARS_CACHE))?.n ?? null; } catch { return null; }
+  });
+  useEffect(() => {
+    if (stars !== null) return;
+    let off = false;
+    fetch(GITHUB_API)
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((d) => {
+        if (off || typeof d.stargazers_count !== "number") return;
+        setStars(d.stargazers_count);
+        try { sessionStorage.setItem(STARS_CACHE, JSON.stringify({ n: d.stargazers_count })); } catch { /* ignore */ }
+      })
+      .catch(() => {});
+    return () => { off = true; };
+  }, [stars]);
+  return stars;
+}
 
 function GitHubWidget({ dark }) {
-  const [starred, setStarred] = useState(false);
-  const [stars, setStars] = useState(BASE_STARS);
-
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        setStarred(!!parsed.starred);
-        setStars(BASE_STARS + (parsed.starred ? 1 : 0));
-      }
-    } catch {}
-  }, []);
-
-  const toggleStar = () => {
-    window.open(GITHUB_REPO, "_blank", "noopener,noreferrer");
-    const next = !starred;
-    setStarred(next);
-    setStars(BASE_STARS + (next ? 1 : 0));
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ starred: next }));
-    } catch {}
-  };
-
+  const stars = useStars();
   return (
-    <div
-      className={`flex items-stretch overflow-hidden rounded-full border text-sm font-semibold transition-colors ${
-        dark ? "border-white/15 bg-white/[0.06] text-white" : "border-stone-200 bg-white text-stone-800"
+    <a
+      href={GITHUB_REPO}
+      target="_blank"
+      rel="noreferrer"
+      aria-label="Star CollegeBuddy on GitHub"
+      className={`group flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-semibold transition-colors ${
+        dark ? "border-white/15 bg-white/[0.06] text-white hover:bg-white/10" : "border-stone-200 bg-white text-stone-800 hover:bg-stone-100"
       }`}
     >
-      <a
-        href={GITHUB_REPO}
-        target="_blank"
-        rel="noreferrer"
-        aria-label="Open CollegeBuddy on GitHub"
-        className={`flex items-center gap-1.5 px-3 py-1.5 transition-colors ${dark ? "hover:bg-white/10" : "hover:bg-stone-100"}`}
-      >
-        <FaGithub size={15} />
-      </a>
-      <button
-        onClick={toggleStar}
-        aria-label={starred ? "Unstar" : "Star"}
-        aria-pressed={starred}
-        className={`flex items-center gap-1 px-2.5 py-1.5 border-l transition-colors ${
-          dark ? "border-white/15 hover:bg-white/10" : "border-stone-200 hover:bg-stone-100"
-        } ${starred ? (dark ? "text-yellow-300" : "text-amber-600") : ""}`}
-      >
-        {starred ? <FaStar size={13} /> : <FaRegStar size={13} />}
-        <span className="tabular-nums text-xs">{stars}</span>
-      </button>
-    </div>
+      <FaGithub size={15} />
+      <span className="text-xs">Star</span>
+      {stars !== null && (
+        <span className={`flex items-center gap-1 border-l pl-2 text-xs tabular-nums ${dark ? "border-white/15" : "border-stone-200"}`}>
+          <FaStar size={11} className="text-amber-400 transition-transform group-hover:rotate-[72deg]" /> {stars}
+        </span>
+      )}
+    </a>
   );
 }
 
-function ProfileMenu({ dark, user, onNavigate }) {
+// A soft pill follows the pointer between links (shared layoutId), and a dot marks the current page.
+function NavItem({ to, children, dark, hover, setHover }) {
+  return (
+    <li onMouseEnter={() => setHover(to)}>
+      <NavLink
+        to={to}
+        className={({ isActive }) =>
+          `relative block px-3 py-1.5 rounded-full transition-colors ${
+            isActive ? (dark ? "text-white" : "text-gray-900") : dark ? "text-white/60 hover:text-white" : "text-gray-500 hover:text-gray-900"
+          }`
+        }
+      >
+        {({ isActive }) => (
+          <>
+            {hover === to && (
+              <motion.span
+                layoutId="nav-pill"
+                transition={{ type: "spring", stiffness: 500, damping: 38 }}
+                className={`absolute inset-0 rounded-full ${dark ? "bg-white/10" : "bg-black/5"}`}
+              />
+            )}
+            <span className="relative">{children}</span>
+            {isActive && <span className="absolute left-1/2 -translate-x-1/2 -bottom-0.5 w-1 h-1 rounded-full bg-indigo-500" />}
+          </>
+        )}
+      </NavLink>
+    </li>
+  );
+}
+
+function ProfileMenu({ dark, onNavigate }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -88,17 +112,21 @@ function ProfileMenu({ dark, user, onNavigate }) {
     };
   }, [open]);
 
-  const linkCls = dark ? "text-white/70 hover:text-white" : "text-stone-600 hover:text-stone-900";
-  const itemCls = dark
-    ? "text-white/80 hover:bg-white/5"
-    : "text-stone-700 hover:bg-stone-50";
+  const linkCls = dark ? "text-white/60 hover:text-white" : "text-gray-500 hover:text-gray-900";
+  const itemCls = dark ? "text-white/80 hover:bg-white/5" : "text-stone-700 hover:bg-stone-50";
   const borderCls = dark ? "border-white/10" : "border-stone-100";
+
+  const items = [
+    { to: "/profile/me", icon: <FiUser size={14} />, label: "My profile" },
+    { to: "/connect", icon: <FiUsers size={14} />, label: "Campus directory" },
+    { to: "/spotlight", icon: <FiStar size={14} />, label: "Spotlight" },
+  ];
 
   return (
     <div ref={ref} className="relative z-[60]">
       <button
         onClick={() => setOpen((o) => !o)}
-        className={`flex items-center gap-1.5 text-sm font-semibold transition-colors ${linkCls}`}
+        className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition-colors ${linkCls}`}
         aria-expanded={open}
         aria-haspopup="menu"
       >
@@ -111,32 +139,20 @@ function ProfileMenu({ dark, user, onNavigate }) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.98 }}
             transition={{ duration: 0.15 }}
-            className={`absolute right-0 top-full mt-2 w-52 rounded-xl border shadow-xl overflow-hidden z-[60] ${
-              dark ? "bg-[#14121f] border-white/10" : "bg-white border-stone-200"
-            }`}
+            className={`absolute right-0 top-full mt-2 w-52 rounded-xl border shadow-xl overflow-hidden z-[60] ${dark ? "bg-[#14121f] border-white/10" : "bg-white border-stone-200"}`}
             role="menu"
           >
-            <Link
-              to="/profile/me"
-              onClick={() => { setOpen(false); onNavigate?.(); }}
-              className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold transition-colors ${itemCls}`}
-            >
-              <FiUser size={14} /> My profile
-            </Link>
-            <Link
-              to="/connect"
-              onClick={() => { setOpen(false); onNavigate?.(); }}
-              className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold border-t transition-colors ${borderCls} ${itemCls}`}
-            >
-              <FiUsers size={14} /> Campus directory
-            </Link>
-            <Link
-              to="/spotlight"
-              onClick={() => { setOpen(false); onNavigate?.(); }}
-              className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold border-t transition-colors ${borderCls} ${itemCls}`}
-            >
-              <FiStar size={14} /> Spotlight
-            </Link>
+            {items.map((it, i) => (
+              <Link
+                key={it.to}
+                to={it.to}
+                role="menuitem"
+                onClick={() => { setOpen(false); onNavigate?.(); }}
+                className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold transition-colors ${i ? `border-t ${borderCls}` : ""} ${itemCls}`}
+              >
+                {it.icon} {it.label}
+              </Link>
+            ))}
           </motion.div>
         )}
       </AnimatePresence>
@@ -151,6 +167,7 @@ export function Navbar() {
   const [dark, setDark] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const [hover, setHover] = useState(null);
   const barRef = useRef(null);
   const menuRef = useRef(null);
 
@@ -167,8 +184,7 @@ export function Navbar() {
         })
       );
       const max = document.documentElement.scrollHeight - window.innerHeight;
-      if (barRef.current)
-        barRef.current.style.transform = `scaleX(${max > 0 ? Math.min(1, window.scrollY / max) : 0})`;
+      if (barRef.current) barRef.current.style.transform = `scaleX(${max > 0 ? Math.min(1, window.scrollY / max) : 0})`;
     };
     const onScroll = () => !raf && (raf = requestAnimationFrame(check));
     check();
@@ -199,8 +215,8 @@ export function Navbar() {
 
   const handleLogout = () => { logout(); setOpen(false); navigate("/"); };
 
-  const link = `transition-colors ${dark ? "text-white/60 hover:text-white" : "text-gray-500 hover:text-gray-900"}`;
-  const activeLink = dark ? "!text-white" : "!text-gray-900";
+  const links = [...PUBLIC_LINKS, ...(user ? MEMBER_LINKS : [])];
+  const mobileLink = `px-4 py-3 rounded-2xl text-sm font-medium opacity-80 hover:opacity-100 transition-colors ${dark ? "hover:bg-white/5" : "hover:bg-black/5"}`;
 
   return (
     <header className="fixed top-0 inset-x-0 z-50 flex justify-center px-4 pt-3 pointer-events-none">
@@ -215,14 +231,12 @@ export function Navbar() {
             CollegeBuddy
           </Link>
 
-          <ul className="hidden md:flex items-center gap-7 text-sm font-medium">
-            {user && FEATURE_LINKS.map((l) => (
-              <li key={l.label}><Link to={l.to} className={link}>{l.label}</Link></li>
+          <ul onMouseLeave={() => setHover(null)} className="hidden md:flex items-center text-sm font-medium">
+            {links.map((l) => (
+              <NavItem key={l.to} to={l.to} dark={dark} hover={hover} setHover={setHover}>{l.label}</NavItem>
             ))}
-            {user && <li><ProfileMenu dark={dark} user={user} /></li>}
-            <li>
-              <NavLink to="/docs" className={({ isActive }) => `${link} ${isActive ? activeLink : ""}`}>Docs</NavLink>
-            </li>
+            {user && <li onMouseEnter={() => setHover(null)}><ProfileMenu dark={dark} /></li>}
+            <NavItem to={DOCS_LINK.to} dark={dark} hover={hover} setHover={setHover}>{DOCS_LINK.label}</NavItem>
           </ul>
 
           <div className="hidden md:flex items-center gap-3">
@@ -233,7 +247,7 @@ export function Navbar() {
               </button>
             ) : (
               <>
-                <Link to="/auth" className={`text-sm font-semibold ${link}`}>Log in</Link>
+                <Link to="/auth" className={`text-sm font-semibold transition-colors ${dark ? "text-white/60 hover:text-white" : "text-gray-500 hover:text-gray-900"}`}>Log in</Link>
                 <Link to="/auth?mode=signup" className={`text-sm font-semibold rounded-full px-4 py-2 transition-colors duration-500 ${dark ? "bg-white text-black hover:bg-white/90" : "bg-black text-white hover:bg-black/85"}`}>
                   Get started
                 </Link>
@@ -262,22 +276,20 @@ export function Navbar() {
               className={`md:hidden absolute left-0 right-0 top-full mt-2 rounded-3xl border p-3 backdrop-blur-xl shadow-2xl ${dark ? "bg-[#14121f]/95 border-white/10 text-white" : "bg-white/95 border-black/5 text-gray-900"}`}
             >
               <div className="flex flex-col">
-                {user && FEATURE_LINKS.map((l) => (
-                  <Link key={l.label} to={l.to} className="px-4 py-3 rounded-2xl text-sm font-medium opacity-80 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/5">{l.label}</Link>
-                ))}
+                {links.map((l) => <Link key={l.to} to={l.to} className={mobileLink}>{l.label}</Link>)}
                 {user && (
                   <>
-                    <Link to="/profile/me" className="px-4 py-3 rounded-2xl text-sm font-medium opacity-80 hover:opacity-100">My profile</Link>
-                    <Link to="/connect" className="px-4 py-3 rounded-2xl text-sm font-medium opacity-80 hover:opacity-100">Campus directory</Link>
-                    <Link to="/spotlight" className="px-4 py-3 rounded-2xl text-sm font-medium opacity-80 hover:opacity-100">Spotlight</Link>
+                    <Link to="/profile/me" className={mobileLink}>My profile</Link>
+                    <Link to="/connect" className={mobileLink}>Campus directory</Link>
+                    <Link to="/spotlight" className={mobileLink}>Spotlight</Link>
                   </>
                 )}
-                <Link to="/docs" className="px-4 py-3 rounded-2xl text-sm font-medium opacity-80 hover:opacity-100">Docs</Link>
+                <Link to={DOCS_LINK.to} className={mobileLink}>{DOCS_LINK.label}</Link>
                 <div className={`my-2 h-px ${dark ? "bg-white/10" : "bg-black/5"}`} />
                 <div className="px-1 py-1"><GitHubWidget dark={dark} /></div>
                 <div className={`my-2 h-px ${dark ? "bg-white/10" : "bg-black/5"}`} />
                 {user ? (
-                  <button onClick={handleLogout} className="text-left px-4 py-3 rounded-2xl text-sm font-semibold opacity-80">Log out</button>
+                  <button onClick={handleLogout} className={`text-left ${mobileLink} font-semibold`}>Log out</button>
                 ) : (
                   <div className="flex gap-2 p-1">
                     <Link to="/auth" className={`flex-1 text-center rounded-full py-2.5 text-sm font-semibold border ${dark ? "border-white/15" : "border-black/10"}`}>Log in</Link>
@@ -292,3 +304,5 @@ export function Navbar() {
     </header>
   );
 }
+
+export default Navbar;

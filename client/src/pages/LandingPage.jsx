@@ -20,9 +20,9 @@ import { HangingNumber } from "../components/features/Landing/HangingNumber";
 const WAVE = "M0,160L48,170.7C96,181,192,203,288,197.3C384,192,480,160,576,165.3C672,171,768,213,864,213.3C960,213,1056,171,1152,149.3C1248,128,1344,128,1392,128L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z";
 
 const CHAT = [
-  { me: false, text: "bhaiya, iPhone 13 still available?" },
-  { me: true, text: "Send ₹500 advance bro, I am out of station" },
-  { me: false, text: "sent. when can I pick it up?" },
+  { me: false, text: "Dai, Casio fx-991 still available? Exam next week 🙏" },
+  { me: true, text: "Yes! Send Rs. 500 advance on eSewa, I'll hold it for you" },
+  { me: false, text: "Sent ✅ Where can I collect it?" },
 ];
 
 export default function LandingPage() {
@@ -82,8 +82,8 @@ export default function LandingPage() {
                  <div className="flex items-center gap-3 mb-6">
                   <div className="w-10 h-10 bg-gray-700 rounded-full grid place-items-center">👤</div>
                   <div>
-                    <div className="text-white font-bold text-sm">iPhone Seller (OLX)</div>
-                    <div className="text-gray-400 text-xs">last seen today at 2:14 am</div>
+                    <div className="text-white font-bold text-sm">Calculator Dai · FB group</div>
+                    <div className="text-gray-400 text-xs">last active: right after you paid</div>
                   </div>
                 </div>
                 <div className="flex flex-col gap-3">
@@ -94,7 +94,7 @@ export default function LandingPage() {
                   ))}
                 </div>
                 <motion.div initial={reduce ? false : { opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.5 + CHAT.length * 0.7 + 0.3, ease: EASE }} className="mt-6 border border-red-500/30 bg-red-500/10 text-red-400 text-xs font-semibold p-2 rounded-lg text-center">
-                  ⚠ This account no longer exists
+                  ⚠ This person isn't available on Messenger
                 </motion.div>
               </motion.div>
             </div>

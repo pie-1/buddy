@@ -5,6 +5,7 @@ const TABS = [
   { key: "roommate", label: "Roommate" },
   { key: "events", label: "Events" },
   { key: "team", label: "Teams" },
+  { key: "help", label: "Help" },
 ];
 
 export default function ProfileTabs({ active, onChange, counts = {} }) {

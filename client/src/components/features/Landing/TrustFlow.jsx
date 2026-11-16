@@ -7,9 +7,9 @@ const MARQUEE_1 = "TRUST • TAP • TRADE • ";
 const MARQUEE_2 = "REAL PEOPLE • JUST YOUR CAMPUS • TRUSTED • ";
 
 const FIXES = [
-  { id: "01", title: "Escrow-protected trades", desc: "Money stays locked until both sides tap done. Scammers starve.", icon: "🛡️", color: "text-red-400" },
-  { id: "02", title: "The Radar", desc: "One feed for everything on campus. Zero group-chat archaeology.", icon: "📡", color: "text-cyan-400" },
-  { id: "03", title: "Verified peers, real help", desc: "Ask, borrow, study together. Ghost Mode until you're ready.", icon: "🤝", color: "text-orange-400" },
+  { id: "01", title: "One-Semester Rentals", desc: "Rent a drafter for exactly one semester. Escrow locks your money until you meet and confirm the handover.", icon: "📐", color: "text-red-400" },
+  { id: "02", title: "Past Papers & Notes", desc: "Find the exact past papers and lab manuals you need from verified seniors, without digging through group chats.", icon: "📚", color: "text-cyan-400" },
+  { id: "03", title: "Seniors & Alumni", desc: "Need career advice or a hackathon teammate? Connect directly with alumni and cross-department peers.", icon: "🤝", color: "text-orange-400" },
 ];
 
 function useIsMd() {

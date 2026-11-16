@@ -12,8 +12,14 @@ export const fetchProfileById = async (id) => {
 };
 
 export const updateMyProfile = async (payload) => {
-  const { data } = await api.put("/users/me", payload);
-  return data;
+  try {
+    const { data } = await api.put("/users/me", payload);
+    return data;
+  } catch (error) {
+    // Log the exact backend response to the console so we can see it!
+    console.error("Backend save error:", error.response?.data || error.message);
+    throw error;
+  }
 };
 
 export const fetchDirectory = async ({ search, department, role, year } = {}) => {

@@ -20,7 +20,16 @@ const userSchema = new mongoose.Schema(
     },
     password: { type: String, required: true },
     university: { type: String, enum: ["TU", "PU", "PoU"], required: true },
-    graduationYear: { type: Number, required: true },
+    graduationYear: {
+      type: Number,
+      required: true,
+      min: [2015, "Graduation year must be 2015 or later"],
+      max: [2035, "Graduation year must be 2035 or earlier"],
+      validate: {
+        validator: Number.isInteger,
+        message: "Graduation year must be a whole number",
+      },
+    },
     role: { type: String, enum: ["student", "moderator", "admin"], default: "student" },
     isVerified: { type: Boolean, default: false },
     college: { type: String, default: "" },
@@ -28,7 +37,6 @@ const userSchema = new mongoose.Schema(
     lookingFor: { type: String, default: "" },
     trustScore: { type: Number, default: 0 },
 
-    // New profile fields
     avatar: { type: String, default: null },
     bio: { type: String, default: "", maxlength: 500 },
     department: { type: String, default: "" },

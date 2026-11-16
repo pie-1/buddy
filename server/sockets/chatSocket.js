@@ -4,9 +4,8 @@ import jwt from "jsonwebtoken";
 import Conversation from "../models/Conversation.js";
 import Message from "../models/Message.js";
 
-const online = new Map(); // userId -> Set<socketId>
+const online = new Map();
 
-// Robust check: participants may be ObjectIds, populated docs, or strings.
 function isParticipant(conversation, userId) {
   const target = userId.toString();
   return conversation.participants.some((p) => {
@@ -37,15 +36,12 @@ export function initSocket(httpServer) {
 
     if (!online.has(uid)) online.set(uid, new Set());
     online.get(uid).add(socket.id);
-
     socket.join(`user:${uid}`);
     io.emit("presence", { userId: uid, online: true });
 
-    // Join a specific conversation room
     socket.on("join-conversation", async ({ conversationId }) => {
       const convo = await Conversation.findById(conversationId);
-      if (!convo) return;
-      if (!isParticipant(convo, uid)) return;
+      if (!convo || !isParticipant(convo, uid)) return;
       socket.join(`convo:${conversationId}`);
     });
 
@@ -53,7 +49,6 @@ export function initSocket(httpServer) {
       socket.leave(`convo:${conversationId}`);
     });
 
-    // Send a message
     socket.on("send-message", async ({ conversationId, text, systemEvent }, ack) => {
       try {
         if (!text && !systemEvent) return ack?.({ error: "Empty message" });
@@ -76,7 +71,8 @@ export function initSocket(httpServer) {
         };
         await convo.save();
 
-        const populated = await msg.populate("senderId", "name");
+        // Populate sender avatar as well
+        const populated = await msg.populate("senderId", "name avatar");
 
         io.to(`convo:${conversationId}`).emit("new-message", populated);
 

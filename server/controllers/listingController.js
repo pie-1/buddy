@@ -1,5 +1,7 @@
 // server/controllers/listingController.js
 import Listing from "../models/Listing.js";
+import Conversation from "../models/Conversation.js";
+import { calculateCommonGround, getViewerPeers } from "../utils/commonGround.js";
 
 export const createListing = async (req, res) => {
   try {
@@ -29,28 +31,53 @@ export const createListing = async (req, res) => {
 
 export const getAllListings = async (req, res) => {
   try {
-    const { category, search, sort } = req.query;
+    const { category, search, sort, mode } = req.query;
+    
+    // If mode is 'for-you', they must be logged in
+    let viewer = null;
+    let viewerPeers = [];
+    if (mode === "for-you" && req.user) {
+      // We need to fetch the viewer's profile (skills, department) to score properly
+      // Note: req.user is usually set by auth middleware. If not, we'd need User.findById
+      viewer = req.user; 
+      viewerPeers = await getViewerPeers(req.user._id, Conversation);
+    }
+
     const filter = { status: "active" };
     if (category) filter.category = category;
     if (search) filter.$text = { $search: search };
 
     const now = new Date();
 
-    const listings = await Listing.find(filter)
-      .populate("sellerId", "name university trustScore isAlumni spotlightUntil")
-      .sort({ createdAt: -1 })
+    // Fetch listings and populate the seller
+    let listings = await Listing.find(filter)
+      .populate("sellerId", "name university trustScore isAlumni spotlightUntil department skills")
       .limit(100);
 
-    // Spotlight sellers' listings float to top
+    // Spotlight floats to top
     listings.sort((a, b) => {
       const aSpot = a.sellerId?.spotlightUntil && a.sellerId.spotlightUntil > now ? 1 : 0;
       const bSpot = b.sellerId?.spotlightUntil && b.sellerId.spotlightUntil > now ? 1 : 0;
-      if (aSpot !== bSpot) return bSpot - aSpot;
-      // Fall back to the requested sort
-      if (sort === "price-asc") return a.price - b.price;
-      if (sort === "price-desc") return b.price - a.price;
-      return new Date(b.createdAt) - new Date(a.createdAt);
+      return bSpot - aSpot;
     });
+
+    if (mode === "for-you" && viewer) {
+      // 1. Calculate score for every listing
+      const scored = listings.map(listing => {
+        const { score, reason } = calculateCommonGround(viewer, listing, listing.sellerId, viewerPeers);
+        return { ...listing.toObject(), _cgScore: score, _cgReason: reason };
+      });
+
+      // 2. Sort by score descending
+      scored.sort((a, b) => b._cgScore - a._cgScore);
+      
+      return res.json(scored);
+    }
+
+    // Default behavior (All)
+    if (sort === "price-asc") listings.sort((a, b) => a.price - b.price);
+    else if (sort === "price-desc") listings.sort((a, b) => b.price - a.price);
+    else listings.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     res.json(listings);
   } catch (error) {
@@ -104,3 +131,4 @@ export const deleteListing = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+

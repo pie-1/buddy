@@ -1,123 +1,160 @@
 // client/src/components/features/Profile/ProfileIdentityCard.jsx
-import { Link, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { FaGithub, FaLinkedin, FaGlobe, FaTwitter } from "react-icons/fa";
-import { FiMessageCircle, FiLoader, FiEdit2, FiStar } from "react-icons/fi";
-import { RoleBadge, SpotlightBadge, StatusPill, CollegePill } from "./ProfileBadge";
-import TrustRing from "./TrustRing";
+import { Link } from "react-router-dom";
+import { FiMessageCircle, FiLoader, FiEdit3 } from "react-icons/fi";
+import { Sparkles, ShieldCheck, GraduationCap } from "lucide-react";
 
-const EASE = [0.22, 1, 0.36, 1];
-
-function SocialLink({ icon: Icon, href, label }) {
-  if (!href) return null;
-  const url = href.startsWith("http") ? href : `https://${href}`;
-  return (
-    <a href={url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-xs font-semibold text-stone-600 hover:text-orange-700 transition-colors">
-      <Icon size={14} /> {label}
-    </a>
-  );
-}
-
-function lastSeenLabel(user) {
-  if (!user.lastSeenAt) return null;
-  const mins = Math.floor((Date.now() - new Date(user.lastSeenAt).getTime()) / 60000);
-  if (mins < 5) return "Active now";
-  if (mins < 60) return `Active ${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `Active ${hrs}h ago`;
-  return `Active ${Math.floor(hrs / 24)}d ago`;
-}
-
-export default function ProfileIdentityCard({ user, spotlight, isOwn, isAdminOrMod, mutual, messaging, onMessage }) {
-  const navigate = useNavigate();
-  const lastSeenText = lastSeenLabel(user);
+export default function ProfileIdentityCard({
+  user, spotlight, isOwn, isAdminOrMod, mutual, commonGround, messaging, onMessage
+}) {
+  const isAlumni = user.isAlumni;
+  const gradYear = user.graduationYear ? String(user.graduationYear).slice(-2) : "";
+  const deptShort = user.department ? user.department.substring(0, 4).toUpperCase() : "STUDENT";
+  
+  // Calculate a fake trust score visual width if the actual trust score is low
+  const displayTrust = user.trustScore || 0;
 
   return (
-    <motion.aside
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, ease: EASE }}
-      className="lg:sticky lg:top-32 self-start"
-    >
-      <div className={`bg-white border rounded-2xl p-6 ${spotlight?.active ? "border-purple-300 shadow-[0_0_32px_-8px_rgba(139,92,246,0.3)]" : "border-stone-200"}`}>
-        <div className="flex flex-col items-center text-center">
-          <div className="relative mb-4">
-            {user.avatar ? (
-              <img src={user.avatar} alt={user.name} className="w-24 h-24 rounded-full object-cover border-2 border-stone-100" />
-            ) : (
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-orange-500 to-red-600 grid place-items-center text-white text-3xl font-bold">
-                {user.name?.[0]?.toUpperCase()}
-              </div>
-            )}
-            {spotlight?.active && (
-              <div className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 grid place-items-center text-white shadow-lg">
-                <FiStar size={12} fill="currentColor" />
-              </div>
-            )}
-          </div>
-
-          <h1 className="text-xl font-serif font-bold text-stone-900 mb-2">{user.name}</h1>
-
-          <div className="flex flex-wrap items-center justify-center gap-1.5 mb-3">
-            <RoleBadge user={user} />
-            {spotlight?.active && <SpotlightBadge />}
-          </div>
-
-          <div className="mb-2"><StatusPill user={user} /></div>
-          <div className="mb-3"><CollegePill user={user} /></div>
-
-          {lastSeenText && <p className="text-[10px] text-stone-400 mb-4">{lastSeenText}</p>}
-
-          {!isAdminOrMod && <div className="mt-1 mb-5"><TrustRing score={user.trustScore} /></div>}
-
-          {isOwn ? (
-            <Link
-              to="/profile/edit"
-              className="w-full inline-flex items-center justify-center gap-2 bg-stone-900 hover:bg-stone-800 text-white text-sm font-semibold py-3 rounded-xl transition-colors"
-            >
-              <FiEdit2 size={14} /> Edit profile
-            </Link>
-          ) : (
-            <button
-              onClick={onMessage}
-              disabled={messaging}
-              className="w-full inline-flex items-center justify-center gap-2 bg-orange-600 hover:bg-orange-500 text-white text-sm font-semibold py-3 rounded-xl transition-colors disabled:opacity-50"
-            >
-              {messaging ? <><FiLoader size={14} className="animate-spin" /> Opening…</> : <><FiMessageCircle size={14} /> Message</>}
-            </button>
-          )}
+    <div className="w-full flex flex-col gap-4">
+      
+      {/* 🌟 THE BUDDY PASS (Inspired by Landing Page) 🌟 */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#26226b] to-[#0c0b18] border border-indigo-400/40 shadow-xl text-white">
+        
+        {/* Top Bar */}
+        <div className="flex items-center justify-between p-5 pb-3 border-b border-white/10">
+          <span className="flex items-center gap-2 text-[10px] font-bold tracking-[0.2em]">
+            <span className="grid place-items-center w-6 h-6 rounded-md bg-white text-[#1e1b4b] text-[12px] font-serif font-black">C</span>
+            BUDDY PASS
+          </span>
+          <small className="text-emerald-400 tracking-widest font-extrabold text-[9px] flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> VERIFIED
+          </small>
         </div>
 
-        {(user.socials?.github || user.socials?.linkedin || user.socials?.portfolio || user.socials?.twitter) && (
-          <div className="mt-5 pt-5 border-t border-stone-100">
-            <div className="text-[10px] uppercase tracking-widest text-stone-400 font-semibold mb-3">Links</div>
-            <div className="flex flex-wrap gap-3">
-              <SocialLink icon={FaGithub} href={user.socials?.github} label="GitHub" />
-              <SocialLink icon={FaLinkedin} href={user.socials?.linkedin} label="LinkedIn" />
-              <SocialLink icon={FaGlobe} href={user.socials?.portfolio} label="Portfolio" />
-              <SocialLink icon={FaTwitter} href={user.socials?.twitter} label="X" />
+        {/* Identity */}
+        <div className="p-5 flex items-center gap-4">
+          <div className="relative">
+            {user.avatar ? (
+              <img src={user.avatar} alt={user.name} className="w-16 h-16 rounded-xl object-cover border-2 border-indigo-400/50 shadow-lg" />
+            ) : (
+              <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 grid place-items-center text-2xl shadow-lg border border-indigo-400/50">
+                🎓
+              </div>
+            )}
+            {/* Spotlight indicator */}
+            {spotlight?.active && (
+              <div className="absolute -bottom-1.5 -right-1.5 bg-purple-500 p-1 rounded-md border border-[#0c0b18] shadow-sm" title="Spotlighted">
+                <Sparkles size={10} className="text-white fill-white" />
+              </div>
+            )}
+          </div>
+          <div>
+            <h1 className="text-xl font-serif font-bold leading-tight">{user.name}</h1>
+            <p className="text-[11px] text-indigo-300/80 mt-1">
+              @{user.name.split(' ')[0].toLowerCase()} • {deptShort} '{gradYear}
+            </p>
+          </div>
+        </div>
+
+        {/* Stats Grid */}
+        <div className="px-5 pb-5 grid grid-cols-2 gap-2">
+          {/* Trust Score */}
+          <div className="col-span-2 bg-white/5 border border-white/10 rounded-xl p-3 flex flex-col justify-between">
+            <div className="flex items-baseline justify-between mb-2">
+              <div className="flex items-baseline gap-2">
+                <b className="text-2xl text-orange-400 leading-none">{displayTrust}</b>
+                <span className="text-[9px] text-gray-300 uppercase tracking-widest font-bold">Trust score</span>
+              </div>
+              <ShieldCheck size={14} className="text-emerald-400" />
+            </div>
+            <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+              <div 
+                className="h-full rounded-full bg-gradient-to-r from-orange-400 to-amber-300 transition-all duration-1000" 
+                style={{ width: `${Math.min(displayTrust, 100)}%` }} 
+              />
             </div>
           </div>
-        )}
+          
+          {/* Role / Status */}
+          <div className="bg-white/5 border border-white/10 rounded-xl p-3 flex flex-col justify-center">
+            <span className="text-[9px] text-gray-400 uppercase tracking-widest font-bold">Role</span>
+            <span className="text-white text-xs font-semibold capitalize mt-1 flex items-center gap-1.5">
+              <GraduationCap size={12} className="text-indigo-400" /> {user.role}
+            </span>
+          </div>
+
+          {/* University */}
+          <div className="bg-white/5 border border-white/10 rounded-xl p-3 flex flex-col justify-center">
+            <span className="text-[9px] text-gray-400 uppercase tracking-widest font-bold">Campus</span>
+            <span className="text-white text-xs font-semibold mt-1">{user.university || "N/A"}</span>
+          </div>
+        </div>
       </div>
 
-      {mutual?.length > 0 && (
-        <div className="mt-4 bg-white border border-stone-200 rounded-2xl p-5">
-          <div className="text-[10px] uppercase tracking-widest text-stone-400 font-semibold mb-3">You both know</div>
-          <div className="flex -space-x-2">
-            {mutual.map((m) => (
-              <Link
-                key={m._id}
-                to={`/profile/${m._id}`}
-                className="w-9 h-9 rounded-full bg-indigo-500 border-2 border-white grid place-items-center text-white text-xs font-bold hover:scale-110 transition-transform"
-                title={m.name}
-              >
-                {m.name?.[0]?.toUpperCase()}
-              </Link>
+      {/* 🌟 COMMON GROUND (Recommendation Engine) 🌟 */}
+      {!isOwn && commonGround?.reasons?.length > 0 && (
+        <div className="bg-white border border-stone-200 rounded-2xl p-4 shadow-sm">
+          <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-indigo-700 mb-3">
+            <Sparkles size={14} className="text-indigo-500" /> Why you should connect
+          </div>
+          <div className="space-y-2">
+            {commonGround.reasons.map((reason, idx) => (
+              <div key={idx} className="flex items-start gap-2 text-xs text-stone-700 font-medium">
+                <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-indigo-400 shrink-0" />
+                {reason}
+              </div>
             ))}
           </div>
         </div>
       )}
-    </motion.aside>
+
+      {/* Actions & Info */}
+      <div className="bg-white border border-stone-200 rounded-2xl p-5 shadow-sm flex flex-col gap-4">
+        
+        {/* Bio */}
+        {user.bio && (
+          <div>
+            <p className="text-sm text-stone-600 leading-relaxed italic">"{user.bio}"</p>
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        {!isOwn ? (
+          <button
+            onClick={onMessage}
+            disabled={messaging}
+            className="w-full flex items-center justify-center gap-2 bg-stone-900 hover:bg-stone-800 text-white text-sm font-semibold py-3 rounded-xl transition-all shadow-sm disabled:opacity-50"
+          >
+            {messaging ? <FiLoader size={16} className="animate-spin" /> : <FiMessageCircle size={16} />}
+            Message
+          </button>
+        ) : (
+          <Link
+            to="/profile/edit"
+            className="w-full flex items-center justify-center gap-2 bg-stone-100 hover:bg-stone-200 border border-stone-200 text-stone-800 text-sm font-semibold py-3 rounded-xl transition-all shadow-sm"
+          >
+            <FiEdit3 size={16} /> Edit profile
+          </Link>
+        )}
+
+        {/* Mutual Connections */}
+        {mutual && mutual.length > 0 && (
+          <div className="pt-4 border-t border-stone-100">
+            <div className="text-[10px] uppercase tracking-widest text-stone-400 font-semibold mb-2">You both know</div>
+            <div className="flex items-center gap-2">
+              <div className="flex -space-x-2">
+                {mutual.map((m, i) => (
+                  <div key={i} className="w-8 h-8 rounded-full bg-indigo-100 border-2 border-white flex items-center justify-center text-[10px] font-bold text-indigo-700 shadow-sm" title={m.name}>
+                    {m.name?.[0]?.toUpperCase()}
+                  </div>
+                ))}
+              </div>
+              <span className="text-xs text-stone-500 font-medium">
+                {mutual.length} mutual {mutual.length === 1 ? 'connection' : 'connections'}
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

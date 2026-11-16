@@ -9,15 +9,17 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+    // Instantly resolve the auth state on boot
+    try {
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      }
+    } catch {
+      // corrupted storage, clear it
+      localStorage.removeItem("user");
     }
-    // Add a small delay so the boot loader is actually visible
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 700); 
-    return () => clearTimeout(timer);
+    setLoading(false);
   }, []);
 
   const login = async (email, password) => {

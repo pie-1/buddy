@@ -24,18 +24,6 @@ export default function ProfileView() {
   const [error, setError] = useState("");
   const [messaging, setMessaging] = useState(false);
 
-  // Guard: auth session must be restored before we touch me._id
-  if (!me) {
-    return (
-      <div className="min-h-screen bg-[#fafaf8]">
-        <Navbar />
-        <div className="pt-32 flex justify-center">
-          <FiLoader className="animate-spin text-orange-500" size={32} />
-        </div>
-      </div>
-    );
-  }
-
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -95,7 +83,7 @@ export default function ProfileView() {
     );
   }
 
-  const { user, listings, roommate, events, teamRequests, mutual, spotlight } = data;
+  const { user, listings, roommate, events, teamRequests, mutual, spotlight, commonGround } = data;
   const isOwn = me._id === user._id;
   const isAdminOrMod = user.role === "admin" || user.role === "moderator";
 
@@ -103,13 +91,16 @@ export default function ProfileView() {
     <div className="min-h-screen bg-[#fafaf8]">
       <Navbar />
       <div className="max-w-6xl mx-auto pt-32 pb-24 px-4 sm:px-6">
-        <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr_280px] gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr_280px] gap-6">
+          
+          {/* Passed commonGround prop here */}
           <ProfileIdentityCard
             user={user}
             spotlight={spotlight}
             isOwn={isOwn}
             isAdminOrMod={isAdminOrMod}
             mutual={mutual}
+            commonGround={commonGround} 
             messaging={messaging}
             onMessage={handleMessage}
           />

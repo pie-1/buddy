@@ -10,6 +10,12 @@ const WAKE_SIGMA = 120;
 const WAKE_REACH = WAKE_SIGMA * 3;
 const WAKE_FADE = 0.985;
 
+// click / tap ripple: a ring of terrain that rolls outward and fades
+const RIPPLE_LIFE = 2.2; // seconds
+const RIPPLE_SPEED = 380; // px per second
+const RIPPLE_W = 38;
+const RIPPLE_AMP = 0.14;
+
 const BASE = 1 / 460;
 const OCT = [
   { f: 1.0, a: 1.0, r: 0.0, vx: 0.02, vy: 0.012, flow: 1.0 },
@@ -60,6 +66,7 @@ export function createTopoField(canvas) {
   let W = 0, H = 0, dpr = 1, cols = 0, rows = 0;
   let values, ambient, wake, wakeTmp, gen;
   let frame = 0;
+  const ripples = [];
 
   const resize = () => {
     dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -135,12 +142,42 @@ export function createTopoField(canvas) {
     }
   }
 
+  function pulse(px, py) {
+    ripples.push({ x: px, y: py, t0: performance.now() / 1000 });
+    if (ripples.length > 6) ripples.shift();
+  }
+
+  function applyRipples(t) {
+    for (let n = ripples.length - 1; n >= 0; n--) {
+      const rp = ripples[n];
+      const age = t - rp.t0;
+      if (age > RIPPLE_LIFE) { ripples.splice(n, 1); continue; }
+      const R = age * RIPPLE_SPEED;
+      const amp = RIPPLE_AMP * (1 - age / RIPPLE_LIFE);
+      const reach = R + RIPPLE_W * 3;
+      const i0 = Math.max(0, Math.floor((rp.x - reach) / CELL + 0.5));
+      const i1 = Math.min(cols - 1, Math.ceil((rp.x + reach) / CELL + 0.5));
+      const j0 = Math.max(0, Math.floor((rp.y - reach) / CELL + 0.5));
+      const j1 = Math.min(rows - 1, Math.ceil((rp.y + reach) / CELL + 0.5));
+      for (let j = j0; j <= j1; j++) {
+        const dy = (j - 0.5) * CELL - rp.y;
+        for (let i = i0; i <= i1; i++) {
+          const dx = (i - 0.5) * CELL - rp.x;
+          const g = (Math.hypot(dx, dy) - R) / RIPPLE_W;
+          if (g > 3 || g < -3) continue;
+          values[j * cols + i] += amp * Math.exp(-(g * g) / 2);
+        }
+      }
+    }
+  }
+
   // flow: scroll-driven offset so the terrain gently morphs as you scroll
   function draw({ t, dt, x, y, speed, on, mx, my, flow = 0 }) {
     if (frame++ % 2 === 0) sampleAmbient(t, -mx * LEAN, -my * LEAN, flow);
     relaxWake(dt);
     if (on > 0.02) stampWake(x, y, (0.1 + 0.22 * Math.min(1, speed / 14)) * Math.min(on, 1));
     for (let k = 0; k < values.length; k++) values[k] = ambient[k] + wake[k];
+    applyRipples(t);
 
     const geos = gen(values);
     const minor = new Path2D();
@@ -154,13 +191,26 @@ export function createTopoField(canvas) {
     ctx.clearRect(0, 0, W, H);
     ctx.lineJoin = "round";
     ctx.setTransform(dpr, 0, 0, dpr, -CELL * dpr, -CELL * dpr);
+    // The lines near the pointer light up (warm orange core, violet falloff). Alpha scales with `on`,
+    // so with no pointer the gradient collapses into the normal flat colours.
+    const glow = Math.min(1, on);
+    const hx = x + CELL; // path space = screen + CELL (see the transform above)
+    const hy = y + CELL;
+    const gMinor = ctx.createRadialGradient(hx, hy, 0, hx, hy, 300);
+    gMinor.addColorStop(0, `rgba(139,92,246,${(0.38 * glow).toFixed(3)})`);
+    gMinor.addColorStop(1, "rgba(120,120,180,.15)");
+    const gMajor = ctx.createRadialGradient(hx, hy, 40, hx, hy, 340);
+    gMajor.addColorStop(0, `rgba(249,115,22,${(0.6 * glow).toFixed(3)})`);
+    gMajor.addColorStop(0.5, `rgba(139,92,246,${(0.42 * glow).toFixed(3)})`);
+    gMajor.addColorStop(1, "rgba(99,102,241,.28)");
+
     ctx.lineWidth = 1;
-    ctx.strokeStyle = "rgba(120,120,180,.15)";
+    ctx.strokeStyle = gMinor;
     ctx.stroke(minor);
-    ctx.lineWidth = 1.2;
-    ctx.strokeStyle = "rgba(99,102,241,.28)";
+    ctx.lineWidth = 1.3;
+    ctx.strokeStyle = gMajor;
     ctx.stroke(major);
   }
 
-  return { draw, destroy: () => ro.disconnect() };
+  return { draw, pulse, destroy: () => ro.disconnect() };
 }

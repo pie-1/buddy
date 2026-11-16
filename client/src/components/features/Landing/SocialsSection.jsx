@@ -1,6 +1,4 @@
 // client/src/components/features/Landing/SocialsSection.jsx
-// "A normal Tuesday on CollegeBuddy": a fan of mini app cards (listing, room, loan, event, team request),
-// not generic posters. Desktop = hoverable fan. Phone = swipeable row. Every card links to its real page.
 import { useContext, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, useInView, useMotionValue, useSpring, useTransform, useReducedMotion } from "framer-motion";
@@ -10,16 +8,14 @@ import { TopoBackdrop } from "../../ui/TopoBackdrop";
 
 const WAVE = "M0,160L48,170.7C96,181,192,203,288,197.3C384,192,480,160,576,165.3C672,171,768,213,864,213.3C960,213,1056,171,1152,149.3C1248,128,1344,128,1392,128L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z";
 
-// Order = left to right. The middle card (index 2) is the star of the fan.
 const CARDS = [
-  { id: "market", to: "/marketplace", from: "#2a2670", to2: "#12103a", icon: "🛍️", tag: "Marketplace", title: "Casio fx-991 calculator", sub: "Rs. 900 · 3rd sem student", foot: { kind: "chip", text: "✓ Verified seller · Escrow on" }, rot: -12, x: -350, y: 56 },
-  { id: "rooms", to: "/roommates", from: "#0e7490", to2: "#0b3b4d", icon: "🏠", tag: "Roommates", title: "Room near the campus gate", sub: "Rs. 6,500 / month · 2 sharing", foot: { kind: "chip", text: "94% habit match" }, rot: -6, x: -175, y: 18 },
-  { id: "lend", to: "/marketplace", from: "#6d3fe0", to2: "#25124f", icon: "📚", tag: "Borrow & lend", title: "Engg Maths, lent to Rohan", sub: "Reminder goes out tomorrow", foot: { kind: "bar", value: 0.72, text: "Due in 2 days" }, rot: 0, x: 0, y: 0 },
+  { id: "market", to: "/marketplace", from: "#2a2670", to2: "#12103a", icon: "📐", tag: "Marketplace", title: "Drafter for 1 semester", sub: "Rs. 500 rent · Verified senior", foot: { kind: "chip", text: "✓ Escrow on" }, rot: -12, x: -350, y: 56 },
+  { id: "rooms", to: "/roommates", from: "#0e7490", to2: "#0b3b4d", icon: "🏠", tag: "Roommates", title: "Room near campus gate", sub: "Rs. 6,500 / month · 2 sharing", foot: { kind: "chip", text: "94% habit match" }, rot: -6, x: -175, y: 18 },
+  { id: "lend", to: "/marketplace", from: "#6d3fe0", to2: "#25124f", icon: "📚", tag: "Borrow & lend", title: "Engg Maths past papers", sub: "Lent to Rohan · 2nd sem", foot: { kind: "bar", value: 0.72, text: "Due in 2 days" }, rot: 0, x: 0, y: 0 },
   { id: "events", to: "/events", from: "#c2570c", to2: "#5a230a", icon: "📡", tag: "Campus Radar", title: "ACIT Hack Night", sub: "Tonight · 7 PM · Seminar Hall", foot: { kind: "avatars", text: "+48 going" }, rot: 6, x: 175, y: 18 },
-  { id: "team", to: "/events", from: "#b4235f", to2: "#4a0e2a", icon: "🤝", tag: "Teams", title: "Need a designer for our hackathon team", sub: "2 of 4 roles open", foot: { kind: "chip", text: "Reply in chat" }, rot: 12, x: 350, y: 56 },
+  { id: "team", to: "/events", from: "#b4235f", to2: "#4a0e2a", icon: "🤝", tag: "Teams", title: "Need a designer for hackathon", sub: "2 of 4 roles open", foot: { kind: "chip", text: "Reply in chat" }, rot: 12, x: 350, y: 56 },
 ];
 
-// Only real links are shown. Fill the empty ones in and they appear automatically.
 const SOCIALS = [
   { label: "GitHub", href: "https://github.com/pie-1/buddy" },
   { label: "LinkedIn", href: "" },
@@ -133,7 +129,6 @@ export default function SocialsSection({ topColor = "#09090b" }) {
             Books lent, rooms found, hack nights filled. No group chat needed.
           </Reveal>
 
-          {/* desktop: hoverable fan */}
           <div ref={fanRef} onMouseLeave={() => setHover(null)} className="hidden md:flex relative mx-auto justify-center items-end h-[340px] mb-14 origin-bottom">
             {CARDS.map((c, i) => {
               const isHover = hover === i;
@@ -156,7 +151,6 @@ export default function SocialsSection({ topColor = "#09090b" }) {
             })}
           </div>
 
-          {/* phone: swipeable row */}
           <div className="md:hidden -mx-6 px-6 flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 mb-8">
             {CARDS.map((c) => (
               <div

@@ -10,23 +10,22 @@ const userSchema = new mongoose.Schema(
       required: true,
       unique: true,
       lowercase: true,
-      validate: {
-        validator: function (v) {
-          const validDomains = /@([a-zA-Z0-9-]+\.)*(tu\.edu\.np|pu\.edu\.np|pokharauniversity\.edu\.np|acme\.edu\.np)$/;
-          return validDomains.test(v);
-        },
-        message: (props) => `${props.value} is not a valid university email.`,
-      },
+      match: [/^\S+@\S+\.\S+$/, "Please use a valid email address"],
     },
     password: { type: String, required: true },
-    university: { type: String, enum: ["TU", "PU", "PoU"], required: true },
+    university: { type: String, enum: ["TU", "PU", "PoU", "Admin"], required: true },
     graduationYear: {
       type: Number,
-      required: true,
-      min: [2015, "Graduation year must be 2015 or later"],
+      // Only required for students
+      required: function () { return this.role === "student"; },
+      min: [2010, "Graduation year must be 2010 or later"],
       max: [2035, "Graduation year must be 2035 or earlier"],
       validate: {
-        validator: Number.isInteger,
+        // Skip validation if the year is null (admin/moderator)
+        validator: function (v) {
+          if (v === null || v === undefined) return true;
+          return Number.isInteger(v);
+        },
         message: "Graduation year must be a whole number",
       },
     },
@@ -69,6 +68,7 @@ userSchema.methods.matchPassword = async function (enteredPassword) {
 };
 
 userSchema.virtual("isAlumni").get(function () {
+  if (!this.graduationYear) return false;
   return this.graduationYear <= new Date().getFullYear();
 });
 

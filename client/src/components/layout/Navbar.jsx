@@ -3,26 +3,26 @@ import { useEffect, useRef, useState, useContext } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { FaGithub, FaStar } from "react-icons/fa";
-import { FiUser, FiUsers, FiChevronDown, FiStar } from "react-icons/fi";
+import { FiUser, FiUsers, FiChevronDown, FiStar, FiShield, FiMessageSquare, FiHome, FiHelpCircle } from "react-icons/fi";
 import { AuthContext } from "../../context/AuthContext";
 
 const GITHUB_REPO = "https://github.com/pie-1/buddy";
 const GITHUB_API = "https://api.github.com/repos/pie-1/buddy";
 const STARS_CACHE = "cb:gh-stars";
 
-// Browsing is public: guests can look around, and sign up when they want to act.
 const PUBLIC_LINKS = [
   { label: "Marketplace", to: "/marketplace" },
   { label: "Roommates", to: "/roommates" },
   { label: "Events", to: "/events" },
 ];
+
 const MEMBER_LINKS = [
-  { label: "Dashboard", to: "/dashboard" },
-  { label: "Chat", to: "/chat" },
+  { label: "Chat", to: "/chat", icon: <FiMessageSquare /> },
+  { label: "Help", to: "/help", icon: <FiHelpCircle /> },
 ];
+
 const DOCS_LINK = { label: "Docs", to: "/docs" };
 
-// Real star count from GitHub (cached for the session). If the repo is private or the call fails, the number is just hidden.
 function useStars() {
   const [stars, setStars] = useState(() => {
     try { return JSON.parse(sessionStorage.getItem(STARS_CACHE))?.n ?? null; } catch { return null; }
@@ -30,14 +30,11 @@ function useStars() {
   useEffect(() => {
     if (stars !== null) return;
     let off = false;
-    fetch(GITHUB_API)
-      .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .then((d) => {
-        if (off || typeof d.stargazers_count !== "number") return;
-        setStars(d.stargazers_count);
-        try { sessionStorage.setItem(STARS_CACHE, JSON.stringify({ n: d.stargazers_count })); } catch { /* ignore */ }
-      })
-      .catch(() => {});
+    fetch(GITHUB_API).then((r) => (r.ok ? r.json() : Promise.reject())).then((d) => {
+      if (off || typeof d.stargazers_count !== "number") return;
+      setStars(d.stargazers_count);
+      try { sessionStorage.setItem(STARS_CACHE, JSON.stringify({ n: d.stargazers_count })); } catch {}
+    }).catch(() => {});
     return () => { off = true; };
   }, [stars]);
   return stars;
@@ -46,17 +43,11 @@ function useStars() {
 function GitHubWidget({ dark }) {
   const stars = useStars();
   return (
-    <a
-      href={GITHUB_REPO}
-      target="_blank"
-      rel="noreferrer"
-      aria-label="Star CollegeBuddy on GitHub"
+    <a href={GITHUB_REPO} target="_blank" rel="noreferrer" aria-label="Star on GitHub"
       className={`group flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-semibold transition-colors ${
         dark ? "border-white/15 bg-white/[0.06] text-white hover:bg-white/10" : "border-stone-200 bg-white text-stone-800 hover:bg-stone-100"
-      }`}
-    >
-      <FaGithub size={15} />
-      <span className="text-xs">Star</span>
+      }`}>
+      <FaGithub size={15} /><span className="text-xs">Star</span>
       {stars !== null && (
         <span className={`flex items-center gap-1 border-l pl-2 text-xs tabular-nums ${dark ? "border-white/15" : "border-stone-200"}`}>
           <FaStar size={11} className="text-amber-400 transition-transform group-hover:rotate-[72deg]" /> {stars}
@@ -66,26 +57,18 @@ function GitHubWidget({ dark }) {
   );
 }
 
-// A soft pill follows the pointer between links (shared layoutId), and a dot marks the current page.
 function NavItem({ to, children, dark, hover, setHover }) {
   return (
     <li onMouseEnter={() => setHover(to)}>
-      <NavLink
-        to={to}
-        className={({ isActive }) =>
+      <NavLink to={to} className={({ isActive }) =>
           `relative block px-3 py-1.5 rounded-full transition-colors ${
             isActive ? (dark ? "text-white" : "text-gray-900") : dark ? "text-white/60 hover:text-white" : "text-gray-500 hover:text-gray-900"
-          }`
-        }
-      >
+          }`}>
         {({ isActive }) => (
           <>
             {hover === to && (
-              <motion.span
-                layoutId="nav-pill"
-                transition={{ type: "spring", stiffness: 500, damping: 38 }}
-                className={`absolute inset-0 rounded-full ${dark ? "bg-white/10" : "bg-black/5"}`}
-              />
+              <motion.span layoutId="nav-pill" transition={{ type: "spring", stiffness: 500, damping: 38 }}
+                className={`absolute inset-0 rounded-full ${dark ? "bg-white/10" : "bg-black/5"}`} />
             )}
             <span className="relative">{children}</span>
             {isActive && <span className="absolute left-1/2 -translate-x-1/2 -bottom-0.5 w-1 h-1 rounded-full bg-indigo-500" />}
@@ -96,7 +79,7 @@ function NavItem({ to, children, dark, hover, setHover }) {
   );
 }
 
-function ProfileMenu({ dark, onNavigate }) {
+function ProfileMenu({ dark, onNavigate, user }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -116,40 +99,37 @@ function ProfileMenu({ dark, onNavigate }) {
   const itemCls = dark ? "text-white/80 hover:bg-white/5" : "text-stone-700 hover:bg-stone-50";
   const borderCls = dark ? "border-white/10" : "border-stone-100";
 
-  const items = [
-    { to: "/profile/me", icon: <FiUser size={14} />, label: "My profile" },
-    { to: "/connect", icon: <FiUsers size={14} />, label: "Campus directory" },
-    { to: "/spotlight", icon: <FiStar size={14} />, label: "Spotlight" },
-  ];
+  const isAdmin = user?.role === "admin" || user?.role === "moderator";
+  
+  const items = isAdmin 
+    ? [
+        { to: "/admin", icon: <FiShield size={14} />, label: "Admin Panel" },
+        { to: "/profile/me", icon: <FiUser size={14} />, label: "My profile" },
+        { to: "/connect", icon: <FiUsers size={14} />, label: "Campus directory" },
+      ]
+    : [
+        { to: "/profile/me", icon: <FiUser size={14} />, label: "My profile" },
+        { to: "/connect", icon: <FiUsers size={14} />, label: "Campus directory" },
+        { to: "/spotlight", icon: <FiStar size={14} />, label: "Spotlight" },
+      ];
 
   return (
     <div ref={ref} className="relative z-[60]">
-      <button
-        onClick={() => setOpen((o) => !o)}
+      <button onClick={() => setOpen((o) => !o)}
         className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition-colors ${linkCls}`}
-        aria-expanded={open}
-        aria-haspopup="menu"
-      >
-        Profile <FiChevronDown size={12} className={`transition-transform ${open ? "rotate-180" : ""}`} />
+        aria-expanded={open} aria-haspopup="menu">
+        {isAdmin ? <><FiShield size={14} className="text-indigo-400" /> Admin</> : "Profile"}
+        <FiChevronDown size={12} className={`transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
       <AnimatePresence>
         {open && (
-          <motion.div
-            initial={{ opacity: 0, y: -6, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -6, scale: 0.98 }}
+          <motion.div initial={{ opacity: 0, y: -6, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6, scale: 0.98 }}
             transition={{ duration: 0.15 }}
             className={`absolute right-0 top-full mt-2 w-52 rounded-xl border shadow-xl overflow-hidden z-[60] ${dark ? "bg-[#14121f] border-white/10" : "bg-white border-stone-200"}`}
-            role="menu"
-          >
+            role="menu">
             {items.map((it, i) => (
-              <Link
-                key={it.to}
-                to={it.to}
-                role="menuitem"
-                onClick={() => { setOpen(false); onNavigate?.(); }}
-                className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold transition-colors ${i ? `border-t ${borderCls}` : ""} ${itemCls}`}
-              >
+              <Link key={it.to} to={it.to} role="menuitem" onClick={() => { setOpen(false); onNavigate?.(); }}
+                className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold transition-colors ${i ? `border-t ${borderCls}` : ""} ${itemCls}`}>
                 {it.icon} {it.label}
               </Link>
             ))}
@@ -177,12 +157,10 @@ export function Navbar() {
       raf = 0;
       setScrolled(window.scrollY > 24);
       const probe = 36;
-      setDark(
-        [...document.querySelectorAll('[data-nav-theme="dark"]')].some((el) => {
+      setDark([...document.querySelectorAll('[data-nav-theme="dark"]')].some((el) => {
           const r = el.getBoundingClientRect();
           return r.top - 60 <= probe && r.bottom >= probe;
-        })
-      );
+        }));
       const max = document.documentElement.scrollHeight - window.innerHeight;
       if (barRef.current) barRef.current.style.transform = `scaleX(${max > 0 ? Math.min(1, window.scrollY / max) : 0})`;
     };
@@ -215,17 +193,21 @@ export function Navbar() {
 
   const handleLogout = () => { logout(); setOpen(false); navigate("/"); };
 
-  const links = [...PUBLIC_LINKS, ...(user ? MEMBER_LINKS : [])];
+  // Combine links and conditionally add Docs for logged-out users
+  const links = [
+    ...PUBLIC_LINKS, 
+    ...(user ? MEMBER_LINKS : [DOCS_LINK])
+  ];
+
   const mobileLink = `px-4 py-3 rounded-2xl text-sm font-medium opacity-80 hover:opacity-100 transition-colors ${dark ? "hover:bg-white/5" : "hover:bg-black/5"}`;
+  const isAdmin = user?.role === "admin" || user?.role === "moderator";
 
   return (
     <header className="fixed top-0 inset-x-0 z-50 flex justify-center px-4 pt-3 pointer-events-none">
       <div ref={menuRef} className="relative w-full max-w-5xl pointer-events-auto">
-        <nav
-          className={`relative flex items-center justify-between gap-4 rounded-full px-4 sm:px-5 py-2.5 border backdrop-blur-md transition-all duration-500 ${
+        <nav className={`relative flex items-center justify-between gap-4 rounded-full px-4 sm:px-5 py-2.5 border backdrop-blur-md transition-all duration-500 ${
             dark ? "bg-white/[0.06] border-white/10 text-white" : "bg-white/70 border-black/5 text-gray-900"
-          } ${scrolled ? "shadow-[0_8px_30px_-12px_rgba(0,0,0,.25)]" : ""}`}
-        >
+          } ${scrolled ? "shadow-[0_8px_30px_-12px_rgba(0,0,0,.25)]" : ""}`}>
           <Link to="/" className="flex items-center gap-2 font-serif font-bold text-lg shrink-0">
             <span className={`grid place-items-center w-7 h-7 rounded-lg text-sm transition-colors duration-500 ${dark ? "bg-white text-[#1e1b4b]" : "bg-[#1e1b4b] text-white"}`}>C</span>
             CollegeBuddy
@@ -235,8 +217,7 @@ export function Navbar() {
             {links.map((l) => (
               <NavItem key={l.to} to={l.to} dark={dark} hover={hover} setHover={setHover}>{l.label}</NavItem>
             ))}
-            {user && <li onMouseEnter={() => setHover(null)}><ProfileMenu dark={dark} /></li>}
-            <NavItem to={DOCS_LINK.to} dark={dark} hover={hover} setHover={setHover}>{DOCS_LINK.label}</NavItem>
+            {user && <li onMouseEnter={() => setHover(null)}><ProfileMenu dark={dark} user={user} /></li>}
           </ul>
 
           <div className="hidden md:flex items-center gap-3">
@@ -255,12 +236,12 @@ export function Navbar() {
             )}
           </div>
 
-          <button onClick={() => setOpen((o) => !o)} aria-label={open ? "Close menu" : "Open menu"} aria-expanded={open} className={`md:hidden relative w-9 h-9 rounded-full grid place-items-center transition-colors ${dark ? "hover:bg-white/10" : "hover:bg-black/5"}`}>
+          <button onClick={() => setOpen((o) => !o)} aria-label={open ? "Close menu" : "Open menu"} aria-expanded={open}
+            className={`md:hidden relative w-9 h-9 rounded-full grid place-items-center transition-colors ${dark ? "hover:bg-white/10" : "hover:bg-black/5"}`}>
             <span className={`absolute h-[2px] w-4 rounded bg-current transition-transform duration-300 ${open ? "rotate-45" : "-translate-y-[3px]"}`} />
             <span className={`absolute h-[2px] w-4 rounded bg-current transition-transform duration-300 ${open ? "-rotate-45" : "translate-y-[3px]"}`} />
           </button>
 
-          {/* progress bar wrapped so its animation stays clipped */}
           <div className="absolute left-0 bottom-0 w-full h-[2px] overflow-hidden rounded-b-full">
             <div ref={barRef} className="h-full w-full origin-left bg-gradient-to-r from-indigo-500 via-violet-400 to-orange-400 opacity-80" style={{ transform: "scaleX(0)" }} />
           </div>
@@ -268,23 +249,19 @@ export function Navbar() {
 
         <AnimatePresence>
           {open && (
-            <motion.div
-              initial={{ opacity: 0, y: -8, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -8, scale: 0.98 }}
+            <motion.div initial={{ opacity: 0, y: -8, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8, scale: 0.98 }}
               transition={{ duration: 0.2 }}
-              className={`md:hidden absolute left-0 right-0 top-full mt-2 rounded-3xl border p-3 backdrop-blur-xl shadow-2xl ${dark ? "bg-[#14121f]/95 border-white/10 text-white" : "bg-white/95 border-black/5 text-gray-900"}`}
-            >
+              className={`md:hidden absolute left-0 right-0 top-full mt-2 rounded-3xl border p-3 backdrop-blur-xl shadow-2xl ${dark ? "bg-[#14121f]/95 border-white/10 text-white" : "bg-white/95 border-black/5 text-gray-900"}`}>
               <div className="flex flex-col">
                 {links.map((l) => <Link key={l.to} to={l.to} className={mobileLink}>{l.label}</Link>)}
                 {user && (
                   <>
+                    {isAdmin && <Link to="/admin" className={`${mobileLink} text-indigo-500 font-bold`}><FiShield size={14} className="inline mr-2" />Admin Panel</Link>}
                     <Link to="/profile/me" className={mobileLink}>My profile</Link>
                     <Link to="/connect" className={mobileLink}>Campus directory</Link>
-                    <Link to="/spotlight" className={mobileLink}>Spotlight</Link>
+                    {!isAdmin && <Link to="/spotlight" className={mobileLink}>Spotlight</Link>}
                   </>
                 )}
-                <Link to={DOCS_LINK.to} className={mobileLink}>{DOCS_LINK.label}</Link>
                 <div className={`my-2 h-px ${dark ? "bg-white/10" : "bg-black/5"}`} />
                 <div className="px-1 py-1"><GitHubWidget dark={dark} /></div>
                 <div className={`my-2 h-px ${dark ? "bg-white/10" : "bg-black/5"}`} />
@@ -304,5 +281,3 @@ export function Navbar() {
     </header>
   );
 }
-
-export default Navbar;

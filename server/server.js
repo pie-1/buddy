@@ -15,6 +15,8 @@ import userRoutes from "./routes/userRoutes.js";
 import { initSocket } from "./sockets/chatSocket.js";
 import helpRoutes from "./routes/helpRoutes.js";
 import spotlightRoutes from "./routes/spotlightRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
+
 
 
 dotenv.config();
@@ -34,6 +36,7 @@ app.use("/api/users", userRoutes);
 app.use("/api", teamRequestRoutes);
 app.use("/api/help", helpRoutes);
 app.use("/api/spotlight", spotlightRoutes);
+app.use("/api/admin", adminRoutes);
 app.get("/api/health", (req, res) => res.json({ status: "success" }));
 
 app.use((err, req, res, next) => {

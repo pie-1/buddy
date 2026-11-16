@@ -22,7 +22,18 @@ export const protect = async (req, res, next) => {
   }
 };
 
+// Allows both Admins and Moderators to access the Admin Control Center
 export const adminOnly = (req, res, next) => {
-  if (req.user?.role === "admin") return next();
-  return res.status(403).json({ message: "Admin access required" });
+  if (req.user?.role === "admin" || req.user?.role === "moderator") {
+    return next();
+  }
+  return res.status(403).json({ message: "Access denied: Admin or Moderator role required" });
+};
+
+// Strict Admin only (use this later for destructive actions like deleting users)
+export const strictAdminOnly = (req, res, next) => {
+  if (req.user?.role === "admin") {
+    return next();
+  }
+  return res.status(403).json({ message: "Access denied: Strict Admin privileges required" });
 };

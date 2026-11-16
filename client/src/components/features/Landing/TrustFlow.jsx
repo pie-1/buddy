@@ -7,9 +7,27 @@ const MARQUEE_1 = "TRUST • TAP • TRADE • ";
 const MARQUEE_2 = "REAL PEOPLE • JUST YOUR CAMPUS • TRUSTED • ";
 
 const FIXES = [
-  { id: "01", title: "One-Semester Rentals", desc: "Rent a drafter for exactly one semester. Escrow locks your money until you meet and confirm the handover.", icon: "📐", color: "text-red-400" },
-  { id: "02", title: "Past Papers & Notes", desc: "Find the exact past papers and lab manuals you need from verified seniors, without digging through group chats.", icon: "📚", color: "text-cyan-400" },
-  { id: "03", title: "Seniors & Alumni", desc: "Need career advice or a hackathon teammate? Connect directly with alumni and cross-department peers.", icon: "🤝", color: "text-orange-400" },
+  { 
+    id: "01", 
+    title: "One-Semester Rentals", 
+    desc: "Rent a drafter for exactly one semester. Escrow holds your money until you meet on campus and confirm the handover.", 
+    icon: "📐", 
+    color: "text-red-400" 
+  },
+  { 
+    id: "02", 
+    title: "Past Papers & Notes", 
+    desc: "Stop digging through WhatsApp. Find past papers, lab manuals, and study guides shared directly by verified seniors.", 
+    icon: "📚", 
+    color: "text-cyan-400" 
+  },
+  { 
+    id: "03", 
+    title: "Seniors & Alumni", 
+    desc: "Need career advice or a teammate for the upcoming hackathon? Connect directly with alumni and students from other departments.", 
+    icon: "🤝", 
+    color: "text-orange-400" 
+  },
 ];
 
 function useIsMd() {

@@ -1,4 +1,4 @@
-// client/src/components/ui/Hero.jsx
+// client/src/components/features/Hero/Hero.jsx
 import { useEffect, useRef, useState } from "react";
 import { motion, useScroll, useSpring, useTransform, useReducedMotion, AnimatePresence } from "framer-motion";
 import { createTopoField } from "./topoField";
@@ -8,7 +8,6 @@ import { HeroCard } from "./HeroCard";
 const R = 160;
 const CARD_CX = 160;
 const CARD_CY = 250;
-
 const clamp01 = (v) => Math.min(1, Math.max(0, v));
 
 function Word({ p, range, className = "", children }) {
@@ -24,13 +23,13 @@ function Word({ p, range, className = "", children }) {
 const leftTexts = [
   { title: "Your Campus.", desc: "Verified .edu.np walls — only your college walks in." },
   { title: "Your Circle.", desc: "Find your people across departments and hostels." },
-  { title: "Your CollegeBuddy.", desc: "The digital heartbeat of your university life." }
+  { title: "Your CollegeBuddy.", desc: "The digital heartbeat of your university life." },
 ];
 
 const rightTexts = [
   { title: "Connect", desc: "Chat with classmates, seniors, and find roommates." },
   { title: "Collaborate", desc: "Form project teams and share study resources." },
-  { title: "Create", desc: "Host events, sell items, and build your campus rep." }
+  { title: "Create", desc: "Host events, sell items, and build your campus rep." },
 ];
 
 export default function Hero() {
@@ -51,11 +50,17 @@ export default function Hero() {
   const { scrollYProgress } = useScroll({ target: containerRef, offset: ["start start", "end end"] });
   const p = useSpring(scrollYProgress, { stiffness: 110, damping: 28, mass: 0.4 });
 
-  const cardScale = useTransform(p, [0, 0.6], [1, 0.62]);
-  const cardY = useTransform(p, [0, 0.6], ["0vh", "-12vh"]);
+  // Adjusted card scale and Y so it shrinks to a nice size and moves up
+  const cardScale = useTransform(p, [0, 0.6, 1], [1, 0.7, 0.45]);
+  const cardY = useTransform(p, [0, 0.6, 1], ["0vh", "-8vh", "-15vh"]);
+  const cardOpacity = useTransform(p, [0.85, 1], [1, 0.8]);
   const hintOpacity = useTransform(p, [0, 0.05], [1, 0]);
   const sideOpacity = useTransform(p, [0, 0.12], [1, 0]);
   const sideShift = useTransform(p, [0, 0.12], [0, -16]);
+  
+  // Tagline fades out earlier to make room for the scroll hint
+  const taglineOpacity = useTransform(p, [0.5, 0.75], [1, 0]);
+  const scrollHintOpacity = useTransform(p, [0.75, 0.9], [0, 1]);
 
   useEffect(() => {
     const hero = heroRef.current;
@@ -87,13 +92,14 @@ export default function Hero() {
     const onMove = (e) => {
       m.x = e.clientX;
       m.y = e.clientY;
-      if (!mouseWant) {
-        lens.x = aura.x = m.x;
-        lens.y = aura.y = m.y;
-      }
+      if (!mouseWant) { lens.x = aura.x = m.x; lens.y = aura.y = m.y; }
       mouseWant = 1;
     };
     const onLeave = () => (mouseWant = 0);
+    const onClick = (e) => {
+      const rect = canvasRef.current.getBoundingClientRect();
+      field.pulse(e.clientX - rect.left, e.clientY - rect.top);
+    };
 
     const tick = (ts) => {
       raf = requestAnimationFrame(tick);
@@ -111,7 +117,7 @@ export default function Hero() {
       if (touch && !scrolled && !reduce) {
         m.x = c.left + c.width / 2 + Math.sin(t * 0.55) * 90;
         m.y = c.top + c.height / 2 + Math.sin(t * 0.8 + 1) * 120;
-        if (!mouseWant) lens.x = aura.x = m.x, (lens.y = aura.y = m.y);
+        if (!mouseWant) { lens.x = aura.x = m.x; lens.y = aura.y = m.y; }
         mouseWant = 1;
       }
       const want = scrolled || reduce ? 0 : mouseWant;
@@ -128,10 +134,7 @@ export default function Hero() {
       vel.x += (lens.x - px - vel.x) * 0.2;
       vel.y += (lens.y - py - vel.y) * 0.2;
       const speed = Math.hypot(vel.x, vel.y);
-      if (speed > 0.05) {
-        dir.x = vel.x / speed;
-        dir.y = vel.y / speed;
-      }
+      if (speed > 0.05) { dir.x = vel.x / speed; dir.y = vel.y / speed; }
       const stretch = Math.min(0.12, speed * 0.008);
 
       on += (want - on) * 0.09;
@@ -145,9 +148,8 @@ export default function Hero() {
         const body = blobOutline(r, t, dir.x, dir.y, stretch, 0);
         const trail = blobOutline(r * 1.35, t, dir.x, dir.y, stretch * 1.3, 1.7);
         const o = Math.min(1, on);
-        const dHero = outlinePath(body, lens.x - h.left, lens.y - h.top);
-        fill.setAttribute("d", dHero);
-        glow.setAttribute("d", dHero);
+        fill.setAttribute("d", outlinePath(body, lens.x - h.left, lens.y - h.top));
+        glow.setAttribute("d", outlinePath(body, lens.x - h.left, lens.y - h.top));
         pass.style.clipPath = `path("${outlinePath(body, lens.x - c.left, lens.y - c.top)}")`;
         glowSvg.style.opacity = o;
         auraPath.setAttribute("d", outlinePath(trail, aura.x - h.left, aura.y - h.top));
@@ -165,10 +167,12 @@ export default function Hero() {
 
     window.addEventListener("mousemove", onMove, { passive: true });
     document.documentElement.addEventListener("mouseleave", onLeave);
+    window.addEventListener("click", onClick);
     raf = requestAnimationFrame(tick);
     return () => {
       window.removeEventListener("mousemove", onMove);
       document.documentElement.removeEventListener("mouseleave", onLeave);
+      window.removeEventListener("click", onClick);
       cancelAnimationFrame(raf);
       io.disconnect();
       field.destroy();
@@ -178,7 +182,11 @@ export default function Hero() {
   return (
     <div ref={containerRef} className="relative w-full h-[260vh] bg-[#fafaf8]">
       <div ref={heroRef} className="sticky top-0 w-full h-screen overflow-hidden isolate flex flex-col items-center justify-center">
-        <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" style={{ maskImage: "radial-gradient(ellipse 85% 80% at 50% 50%, #000 40%, rgba(0,0,0,.45) 100%)", WebkitMaskImage: "radial-gradient(ellipse 85% 80% at 50% 50%, #000 40%, rgba(0,0,0,.45) 100%)" }} />
+        <canvas
+          ref={canvasRef}
+          className="absolute inset-0 w-full h-full pointer-events-none"
+          style={{ maskImage: "radial-gradient(ellipse 85% 80% at 50% 50%, #000 40%, rgba(0,0,0,.45) 100%)", WebkitMaskImage: "radial-gradient(ellipse 85% 80% at 50% 50%, #000 40%, rgba(0,0,0,.45) 100%)" }}
+        />
 
         <svg className="absolute inset-0 w-full h-full z-10 pointer-events-none">
           <defs>
@@ -196,59 +204,57 @@ export default function Hero() {
           <use href="#cb-lens-edge" stroke="rgba(139,92,246,.05)" strokeWidth="10" strokeLinejoin="round" />
         </svg>
 
-        <HeroCard cardRef={cardRef} passRef={passRef} scale={cardScale} y={cardY} hintOpacity={hintOpacity} />
+        <motion.div style={{ opacity: cardOpacity }} className="relative z-20 mt-[-5vh]">
+          <HeroCard cardRef={cardRef} passRef={passRef} scale={cardScale} y={cardY} hintOpacity={hintOpacity} />
+        </motion.div>
 
-        <h1 className="absolute top-[70%] left-1/2 -translate-x-1/2 z-30 pointer-events-none whitespace-nowrap font-serif font-bold tracking-tight text-[#1a1a2e] text-[44px] sm:text-7xl lg:text-[112px] leading-none">
+        {/* Tagline - fades out earlier now */}
+        <motion.h1 style={{ opacity: taglineOpacity }} className="absolute top-[68%] sm:top-[70%] left-1/2 -translate-x-1/2 z-30 pointer-events-none whitespace-nowrap font-serif font-bold tracking-tight text-[#1a1a2e] text-[32px] sm:text-7xl lg:text-[96px] leading-none text-center">
           <Word p={p} range={[0.3, 0.5]}>connect.</Word>{" "}
           <Word p={p} range={[0.42, 0.62]}>buy.</Word>{" "}
           <Word p={p} range={[0.54, 0.76]} className="italic text-indigo-600">belong.</Word>
-        </h1>
+        </motion.h1>
 
-        {/* Side Text with Hover Descriptions */}
-        <motion.div
-          style={{ opacity: sideOpacity, y: sideShift }}
-          className="absolute inset-0 z-40 pointer-events-none flex items-center justify-between px-12 md:px-24 max-w-[1500px] mx-auto w-full"
+        {/* Premium Scroll Hint with Mouse Icon */}
+        <motion.div 
+          style={{ opacity: scrollHintOpacity }} 
+          className="absolute bottom-16 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-3 pointer-events-none"
         >
-          <div className="hidden md:flex flex-col items-start gap-16 pointer-events-auto">
+          <div className="w-[26px] h-[42px] rounded-full border-2 border-gray-400/50 flex justify-center pt-2">
+            <motion.div 
+              animate={{ y: [0, 12, 0], opacity: [1, 0.2, 1] }} 
+              transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+              className="w-1.5 h-1.5 rounded-full bg-gray-500"
+            />
+          </div>
+          <span className="text-[10px] tracking-[0.3em] uppercase font-bold text-gray-500 whitespace-nowrap">
+            Keep scrolling story continues..
+          </span>
+        </motion.div>
+
+        <motion.div style={{ opacity: sideOpacity, y: sideShift }} className="absolute inset-0 z-40 pointer-events-none flex items-center justify-between px-4 sm:px-12 md:px-24 max-w-[1500px] mx-auto w-full">
+          <div className="hidden lg:flex flex-col items-start gap-16 pointer-events-auto">
             {leftTexts.map((item, i) => (
-              <div
-                key={item.title}
-                className="relative cursor-pointer group"
-                onMouseEnter={() => setHoveredLeft(i)}
-                onMouseLeave={() => setHoveredLeft(null)}
-              >
-                <span className="relative z-10 text-[2.5rem] font-serif font-bold text-gray-900 group-hover:text-indigo-600 transition-colors duration-300">
-                  {item.title}
-                </span>
+              <div key={item.title} className="relative cursor-pointer group" onMouseEnter={() => setHoveredLeft(i)} onMouseLeave={() => setHoveredLeft(null)}>
+                <span className="relative z-10 text-[2rem] xl:text-[2.5rem] font-serif font-bold text-gray-900 group-hover:text-indigo-600 transition-colors duration-300">{item.title}</span>
                 <div className="absolute -bottom-4 left-0 w-16 h-[2px] bg-gray-300 group-hover:bg-indigo-300 transition-colors" />
                 <AnimatePresence>
                   {hoveredLeft === i && (
-                    <motion.p initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="absolute top-full mt-6 w-64 text-sm font-sans font-medium text-gray-500 leading-relaxed">
-                      {item.desc}
-                    </motion.p>
+                    <motion.p initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="absolute top-full mt-6 w-64 text-sm font-sans font-medium text-gray-500 leading-relaxed">{item.desc}</motion.p>
                   )}
                 </AnimatePresence>
               </div>
             ))}
           </div>
 
-          <div className="hidden md:flex flex-col items-end gap-16 pointer-events-auto">
+          <div className="hidden lg:flex flex-col items-end gap-16 pointer-events-auto">
             {rightTexts.map((item, i) => (
-              <div
-                key={item.title}
-                className="relative cursor-pointer text-right group"
-                onMouseEnter={() => setHoveredRight(i)}
-                onMouseLeave={() => setHoveredRight(null)}
-              >
-                <span className="relative z-10 text-[2.5rem] font-serif font-bold text-gray-900 group-hover:text-indigo-600 transition-colors duration-300">
-                  {item.title}
-                </span>
+              <div key={item.title} className="relative cursor-pointer text-right group" onMouseEnter={() => setHoveredRight(i)} onMouseLeave={() => setHoveredRight(null)}>
+                <span className="relative z-10 text-[2rem] xl:text-[2.5rem] font-serif font-bold text-gray-900 group-hover:text-indigo-600 transition-colors duration-300">{item.title}</span>
                 <div className="absolute -bottom-4 right-0 w-16 h-[2px] bg-gray-300 group-hover:bg-indigo-300 transition-colors" />
                 <AnimatePresence>
                   {hoveredRight === i && (
-                    <motion.p initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="absolute top-full mt-6 right-0 w-64 text-sm font-sans font-medium text-gray-500 leading-relaxed">
-                      {item.desc}
-                    </motion.p>
+                    <motion.p initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="absolute top-full mt-6 right-0 w-64 text-sm font-sans font-medium text-gray-500 leading-relaxed">{item.desc}</motion.p>
                   )}
                 </AnimatePresence>
               </div>

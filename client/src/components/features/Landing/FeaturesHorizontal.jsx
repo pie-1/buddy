@@ -10,9 +10,9 @@ const FEATURES = [
     tag: "MARKETPLACE",
     tagColor: "text-indigo-400 border-indigo-400/30 bg-indigo-400/10",
     title: "Don't buy new. Borrow smart.",
-    desc: "Need a drafter for one semester? Rent it from a senior. Sell last year's books. Your money stays safe until you both say “done”.",
+    desc: "Need a drafter for just one semester? Rent it from a senior. Sell last year's books. Your money stays safe until you both say “done”.",
     icon: "🛍️",
-    tags: ["Escrow protected", "Verified students"],
+    tags: ["protected", "Verified students"],
     cta: "Browse the marketplace",
   },
   {
@@ -92,7 +92,6 @@ function FeatureCard({ f }) {
   );
 }
 
-/* Reduced motion: no scroll-jacking. A normal swipeable row. */
 function Static() {
   return (
     <section className="relative bg-[#fafaf8] py-24 overflow-hidden">
@@ -107,9 +106,8 @@ function Static() {
 function Pinned() {
   const sectionRef = useRef(null);
   const trackRef = useRef(null);
-  const [shift, setShift] = useState(0); // how far the track really has to travel, in px
+  const [shift, setShift] = useState(0);
 
-  // Measure instead of guessing a percentage: a fixed "-72%" overshot on desktop and left a blank screen at the end.
   useLayoutEffect(() => {
     const measure = () => {
       if (!trackRef.current) return;
@@ -141,7 +139,6 @@ function Pinned() {
     mouseY.set(e.clientY - r.top);
   };
 
-  // scroll distance scales with the real travel, so it never drags on a wide screen
   const height = `calc(100vh + ${Math.round(shift * 1.5)}px)`;
 
   return (
@@ -158,7 +155,6 @@ function Pinned() {
           {FEATURES.map((f) => <FeatureCard key={f.id} f={f} />)}
         </motion.div>
 
-        {/* progress: where you are in the kit */}
         <div className="relative z-10 max-w-6xl mx-auto px-6 w-full mt-8">
           <div className="h-[3px] rounded-full bg-black/10 overflow-hidden">
             <motion.div style={{ scaleX: progress }} className="h-full origin-left bg-gradient-to-r from-indigo-500 to-orange-400" />

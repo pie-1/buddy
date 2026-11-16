@@ -1,28 +1,23 @@
 // client/src/pages/LandingPage.jsx
 import { useRef } from "react";
 import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
-
-// Layout
 import { Navbar } from "../components/layout/Navbar";
 import Footer from "../components/layout/Footer";
-
-// Features
 import Hero from "../components/features/Hero/Hero";
 import { ProblemFlow } from "../components/features/Landing/ProblemFlow";
 import { TrustFlow } from "../components/features/Landing/TrustFlow";
 import FeaturesHorizontal from "../components/features/Landing/FeaturesHorizontal";
 import SocialsSection from "../components/features/Landing/SocialsSection";
-
-// Utils / Shared
 import { Reveal, MaskLine, EASE } from "../components/features/Landing/Reveal";
 import { HangingNumber } from "../components/features/Landing/HangingNumber";
 
 const WAVE = "M0,160L48,170.7C96,181,192,203,288,197.3C384,192,480,160,576,165.3C672,171,768,213,864,213.3C960,213,1056,171,1152,149.3C1248,128,1344,128,1392,128L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z";
 
 const CHAT = [
-  { me: false, text: "Dai, Casio fx-991 still available? Exam next week 🙏" },
-  { me: true, text: "Yes! Send Rs. 500 advance on eSewa, I'll hold it for you" },
-  { me: false, text: "Sent ✅ Where can I collect it?" },
+  { me: false, text: "Dai, is the scientific calculator still available?" },
+  { me: true, text: "Yes. Send Rs. 500 advance on eSewa, I'll hold it." },
+  { me: false, text: "Sent ✅ Where can I pick it up?" },
+  { me: false, text: "Dai? Hello?" },
 ];
 
 export default function LandingPage() {
@@ -39,7 +34,6 @@ export default function LandingPage() {
       {/* Section 1: Campus life is broken */}
       <section ref={darkRef} data-nav-theme="dark" className="relative z-20 bg-[#09090b] text-white pt-32">
         
-        {/* Top Wave */}
         <div className="absolute top-0 left-0 w-full overflow-hidden leading-[0] -translate-y-[99%] pointer-events-none">
           <svg className="w-full h-[100px] md:h-[150px] block" viewBox="0 0 1440 320" preserveAspectRatio="none">
             <path fill="#09090b" d={WAVE} />
@@ -63,6 +57,8 @@ export default function LandingPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center mt-32 relative">
+            
+            {/* Left Text + Hanging Number */}
             <div className="relative z-10">
               <HangingNumber num="01" color="text-white" />
               <h3 className="text-5xl md:text-7xl font-serif font-bold leading-[1.05] tracking-tight relative z-10">
@@ -72,11 +68,12 @@ export default function LandingPage() {
                 <MaskLine delay={0.38} className="text-gray-500">advance.”</MaskLine>
                 <MaskLine delay={0.6} className="text-red-500 italic mt-3">“Last price.”</MaskLine>
               </h3>
-              <Reveal as="p" delay={0.8} className="text-gray-400 mt-8 max-w-md relative z-10">
-                Buying and selling on campus shouldn't feel like a crime scene.
+              <Reveal as="p" delay={0.8} className="text-gray-400 mt-8 max-w-md relative z-10 text-lg">
+                Buying a used calculator or renting a book shouldn't feel like a gamble. But without verification, it is.
               </Reveal>
             </div>
 
+            {/* Chat Example */}
             <div className="relative flex justify-center md:justify-end">
               <motion.div style={{ y: y1 }} className="relative w-[320px] bg-[#1c1a28] rounded-3xl border border-white/10 p-4 shadow-2xl z-10">
                  <div className="flex items-center gap-3 mb-6">

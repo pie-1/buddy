@@ -2,9 +2,10 @@
 import { useState, useContext, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence, useAnimationControls } from "framer-motion";
-import { Eye, EyeOff, ArrowLeft, ArrowRight } from "lucide-react";
+import { Eye, EyeOff, ArrowLeft, ArrowRight, Shield, User as UserIcon } from "lucide-react";
 import { AuthContext } from "../context/AuthContext";
 import AuthShowcase from "../components/ui/AuthShowcase";
+import { GlowBackground } from "../components/ui/GlowBackground";
 
 const EASE = [0.22, 1, 0.36, 1];
 const INPUT = "w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 focus:bg-white/[0.07] focus:ring-4 focus:ring-indigo-500/10 transition-all";
@@ -78,7 +79,12 @@ export default function AuthPage() {
   const [mode, setMode] = useState(params.get("mode") === "signup" ? "signup" : "login");
   const [showPassword, setShowPassword] = useState(false);
   const [capsOn, setCapsOn] = useState(false);
-  const [formData, setFormData] = useState({ name: "", email: "", password: "", graduationYear: "", otp: "" });
+  
+  const [formData, setFormData] = useState({ 
+    name: "", email: "", password: "", graduationYear: "", otp: "", 
+    isAdminToggle: false, adminCode: "" 
+  });
+  
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const card = useAnimationControls();
@@ -94,7 +100,8 @@ export default function AuthPage() {
 
   const year = new Date().getFullYear();
   const pwScore = strength(formData.password);
-  const emailLooksOff = mode === "signup" && formData.email.includes("@") && !/\.edu\.np$/i.test(formData.email.trim());
+  const isStudent = !formData.isAdminToggle;
+  const emailLooksOff = mode === "signup" && isStudent && formData.email.includes("@") && !/\.edu\.np$/i.test(formData.email.trim());
 
   const switchMode = (next) => { setMode(next); setError(""); setShowPassword(false); };
   const handleChange = (e) => { setFormData((f) => ({ ...f, [e.target.name]: e.target.value })); setError(""); };
@@ -111,7 +118,15 @@ export default function AuthPage() {
         const res = await login(email, formData.password);
         if (!res.success) fail(res.message);
       } else if (mode === "signup") {
-        const res = await register({ name: formData.name.trim(), email, password: formData.password, graduationYear: Number(formData.graduationYear) });
+        const res = await register({ 
+          name: formData.name.trim(), 
+          email, 
+          password: formData.password, 
+          graduationYear: isStudent ? Number(formData.graduationYear) : undefined,
+          role: formData.isAdminToggle ? "admin" : "student",
+          adminCode: formData.adminCode
+        });
+        
         if (res.success) {
           setFormData((f) => ({ ...f, email, otp: "" }));
           setMode("verify");
@@ -130,16 +145,16 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen bg-[#09090b] text-white font-sans flex relative overflow-hidden" data-nav-theme="dark">
-      <div className="absolute top-1/2 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full pointer-events-none" style={{ background: "radial-gradient(circle, rgba(79,70,229,.22), transparent 65%)" }} />
-      <div className="absolute top-[10%] left-[8%] w-[400px] h-[400px] rounded-full pointer-events-none" style={{ background: "radial-gradient(circle, rgba(249,115,22,.1), transparent 65%)" }} />
-
+      <GlowBackground />
+      
       <main className="relative z-10 flex-1 min-w-0 flex flex-col items-center justify-center px-5 py-10">
         <div className="w-full max-w-md">
           <Link to="/" className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors mb-6">
             <ArrowLeft size={16} /> Back to home
           </Link>
 
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={card} className="p-7 sm:p-8 bg-[#14121f]/80 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={card} className="p-7 sm:p-8 bg-[#14121f]/80 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl relative overflow-hidden">
+            
             <div className="text-center mb-7">
               <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-white text-[#1e1b4b] font-serif font-black text-xl mb-4 shadow-lg shadow-white/10">C</div>
               <AnimatePresence mode="wait" initial={false}>
@@ -161,7 +176,31 @@ export default function AuthPage() {
             </AnimatePresence>
 
             <form ref={formRef} onSubmit={handleSubmit}>
+              
               <Collapse show={mode === "signup"}>
+                <div className="flex bg-white/5 p-1 rounded-xl mb-4 border border-white/10">
+                  <button
+                    type="button"
+                    onClick={() => setFormData(f => ({ ...f, isAdminToggle: false, adminCode: "" }))}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-semibold rounded-lg transition-colors ${!formData.isAdminToggle ? "bg-indigo-600 text-white shadow-md" : "text-gray-400 hover:text-white"}`}
+                  >
+                    <UserIcon size={16} /> Student
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData(f => ({ ...f, isAdminToggle: true }))}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-semibold rounded-lg transition-colors ${formData.isAdminToggle ? "bg-indigo-600 text-white shadow-md" : "text-gray-400 hover:text-white"}`}
+                  >
+                    <Shield size={16} /> Admin / Mod
+                  </button>
+                </div>
+
+                <Collapse show={formData.isAdminToggle}>
+                  <label htmlFor="adminCode" className={LABEL}>Secret Invite Code</label>
+                  <input id="adminCode" type="password" name="adminCode" required={formData.isAdminToggle} value={formData.adminCode} onChange={handleChange} className={INPUT} placeholder="Enter code to unlock access" />
+                  <p className="mt-1.5 text-[11px] text-amber-400/80 mb-4">You must be an authorized staff member to register as Admin.</p>
+                </Collapse>
+
                 <label htmlFor="name" className={LABEL}>Full name</label>
                 <input id="name" type="text" name="name" required={mode === "signup"} autoComplete="name" value={formData.name} onChange={handleChange} className={INPUT} placeholder="Pawan Singh" />
               </Collapse>
@@ -178,9 +217,10 @@ export default function AuthPage() {
                 </AnimatePresence>
               </Collapse>
 
-              <Collapse show={mode === "signup"}>
+              <Collapse show={mode === "signup" && isStudent}>
                 <label htmlFor="graduationYear" className={LABEL}>Graduation year</label>
-                <input id="graduationYear" type="number" name="graduationYear" required={mode === "signup"} min={year} max={year + 8} value={formData.graduationYear} onChange={handleChange} className={INPUT} placeholder={String(year + 1)} />
+                <input id="graduationYear" type="number" name="graduationYear" required={mode === "signup" && isStudent} min={2010} max={year + 8} value={formData.graduationYear} onChange={handleChange} className={INPUT} placeholder={String(year + 1)} />
+                <p className="mt-1.5 text-[11px] text-gray-500 mb-4">If you have already graduated, enter your past graduation year.</p>
               </Collapse>
 
               <Collapse show={mode !== "verify"}>
@@ -208,7 +248,7 @@ export default function AuthPage() {
                 <button type="button" onClick={() => switchMode("signup")} className="mt-4 text-xs text-gray-500 hover:text-white transition-colors">Wrong email? Go back and edit it</button>
               </Collapse>
 
-              <motion.button type="submit" disabled={loading || (mode === "verify" && formData.otp.length < 6)} whileHover={loading ? undefined : { y: -1 }} whileTap={{ scale: 0.985 }} className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3.5 rounded-xl transition-colors shadow-[0_0_24px_rgba(79,70,229,0.35)] disabled:opacity-50 disabled:cursor-not-allowed">
+              <motion.button type="submit" disabled={loading || (mode === "verify" && formData.otp.length < 6)} whileHover={loading ? undefined : { y: -1 }} whileTap={{ scale: 0.985 }} className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3.5 rounded-xl transition-colors shadow-[0_0_24px_rgba(79,70,229,0.35)] disabled:opacity-50 disabled:cursor-not-allowed mt-6">
                 {loading ? (<><span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" /> Processing…</>) : (<>{copy.cta} <ArrowRight size={16} /></>)}
               </motion.button>
             </form>

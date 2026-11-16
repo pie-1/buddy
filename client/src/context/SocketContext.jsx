@@ -4,7 +4,6 @@ import { io } from "socket.io-client";
 import { AuthContext } from "./AuthContext";
 
 export const SocketContext = createContext(null);
-
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
 
 export function SocketProvider({ children }) {
@@ -13,16 +12,15 @@ export function SocketProvider({ children }) {
   const [onlineUsers, setOnlineUsers] = useState(new Set());
 
   useEffect(() => {
-    if (!user?.token) {
-      if (socket) {
-        socket.disconnect();
-        setSocket(null);
-      }
+    // FIX: Read token from localStorage, not from user object
+    const token = localStorage.getItem("token");
+    if (!token || !user?._id) {
+      if (socket) { socket.disconnect(); setSocket(null); }
       return;
     }
 
     const s = io(SOCKET_URL, {
-      auth: { token: user.token },
+      auth: { token },
       transports: ["websocket"],
     });
 
@@ -36,16 +34,10 @@ export function SocketProvider({ children }) {
     });
 
     setSocket(s);
-
-    return () => {
-      s.disconnect();
-      setSocket(null);
-    };
-  }, [user?.token]); // eslint-disable-line react-hooks/exhaustive-deps
+    return () => { s.disconnect(); setSocket(null); };
+  }, [user?._id]);
 
   return (
-    <SocketContext.Provider value={{ socket, onlineUsers }}>
-      {children}
-    </SocketContext.Provider>
+    <SocketContext.Provider value={{ socket, onlineUsers }}>{children}</SocketContext.Provider>
   );
 }

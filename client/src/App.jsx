@@ -8,7 +8,6 @@ import { Loader } from "./components/ui/Loader";
 const LandingPage = lazy(() => import("./pages/LandingPage"));
 const AuthPage = lazy(() => import("./pages/AuthPage"));
 const DocsPage = lazy(() => import("./pages/DocsPage"));
-const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Marketplace = lazy(() => import("./pages/Marketplace"));
 const ListingDetail = lazy(() => import("./pages/ListingDetail"));
 const CreateListing = lazy(() => import("./pages/CreateListing"));
@@ -32,6 +31,8 @@ const HelpDetail = lazy(() => import("./pages/HelpDetail"));
 const Spotlight = lazy(() => import("./pages/Spotlight"));
 const SpotlightClaim = lazy(() => import("./pages/SpotlightClaim"));
 const AdminSpotlight = lazy(() => import("./pages/AdminSpotlight"));
+const AdminPanel = lazy(() => import("./pages/AdminPanel"));
+
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useContext(AuthContext);
@@ -80,9 +81,7 @@ export default function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/docs" element={<DocsPage />} />
           <Route path="/auth" element={<AuthPage />} />
-
-          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          
+         
           <Route path="/marketplace" element={<Marketplace />} />
           <Route path="/marketplace/new" element={<ProtectedRoute><CreateListing /></ProtectedRoute>} />
           <Route path="/marketplace/:id" element={<ListingDetail />} />
@@ -115,6 +114,8 @@ export default function App() {
           <Route path="/spotlight" element={<Spotlight />} />
           <Route path="/spotlight/claim" element={<ProtectedRoute><SpotlightClaim /></ProtectedRoute>} />
           <Route path="/dashboard/spotlight" element={<ProtectedRoute><AdminSpotlight /></ProtectedRoute>} />
+
+          <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

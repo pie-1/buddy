@@ -5,12 +5,12 @@ import { Reveal, MaskLine, EASE } from "./Reveal";
 import { HangingNumber } from "./HangingNumber";
 
 const CHAT_LIST = [
-  "Need a drafter for 1 sem 😭",
-  "Dai, DSA past papers??",
-  "Room khali near campus gate",
-  "Hackathon team: need 1 coder",
-  "Any CS senior to guide?",
-  "Lab manual PDF, someone?",
+  { text: "Dai, id u have used drafter? 1 sem matra chahiyo", sub: "Seen 2 hours ago. No reply." },
+  { text: "Kasari DSA pass gareko? Past papers chahiyo", sub: "Typed in the group. No one responded." },
+  { text: "Room khali chha ki hostel ma? Budget 6k", sub: "Scrolling through 74 Facebook groups." },
+  { text: "Hackathon team needs 1 coder", sub: "Posted yesterday. Still no teammates." },
+  { text: "Anyone know a CS senior? Need career advice", sub: "You feel too awkward to DM them." },
+  { text: "Lab manual PDF kasaile pathau na", sub: "Sent a blurry photo of a photo instead." },
 ];
 
 export function ProblemFlow() {
@@ -26,19 +26,19 @@ export function ProblemFlow() {
       <section className="max-w-6xl mx-auto px-6 pt-32 pb-48 relative">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
           <motion.div style={{ y: y1 }} className="relative flex justify-center md:justify-start order-2 md:order-1">
-            <Reveal y={50} className="relative w-[300px] bg-[#1c1a28] rounded-3xl border border-white/10 p-5 shadow-2xl z-10">
+            <Reveal y={50} className="relative w-[320px] bg-[#1c1a28] rounded-3xl border border-white/10 p-5 shadow-2xl z-10">
               <div className="flex justify-between items-center mb-4 border-b border-white/10 pb-4">
                 <span className="text-sm font-bold text-white">Campus Groups</span>
-                <span className="text-xs text-green-400">74 muted</span>
+                <span className="text-xs text-green-400">10 muted</span>
               </div>
               <div className="flex flex-col gap-4">
                 {CHAT_LIST.map((chat, i) => (
-                  <motion.div key={chat} initial={reduce ? false : { opacity: 0, x: -14 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.3 + i * 0.09, ease: EASE }} className="flex items-center justify-between">
+                  <motion.div key={chat.text} initial={reduce ? false : { opacity: 0, x: -14 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.3 + i * 0.09, ease: EASE }} className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-gray-700 grid place-items-center text-xs">👤</div>
                       <div>
-                        <div className="text-xs font-bold text-gray-200">{chat}</div>
-                        <div className="text-[10px] text-gray-500">~ random forward, again</div>
+                        <div className="text-xs font-bold text-gray-200">{chat.text}</div>
+                        <div className="text-[10px] text-gray-500 mt-0.5">{chat.sub}</div>
                       </div>
                     </div>
                     <span className="bg-white/10 text-[9px] px-1.5 py-0.5 rounded text-gray-400">999+</span>
@@ -57,7 +57,7 @@ export function ProblemFlow() {
               <MaskLine delay={0.3} className="text-[#a3e635] mt-2">CLASSIC.</MaskLine>
             </h2>
             <Reveal as="p" delay={0.5} className="text-gray-400 mt-6 max-w-md relative z-10">
-              Need a drafter for one sem? Past papers? A flatmate? You're in 74 groups and still can't find one answer.
+              You're in WhatsApp groups. Yet when you actually need a past paper, a drafter for one semester, or a teammate, you're stuck scrolling.
             </Reveal>
           </div>
         </div>
@@ -71,10 +71,10 @@ export function ProblemFlow() {
             <h2 className="text-5xl md:text-7xl font-sans font-black leading-[1.05] tracking-tighter relative z-10">
               <MaskLine>WHO'S UP?</MaskLine>
               <MaskLine delay={0.1}>...</MaskLine>
-              <MaskLine delay={0.2} className="text-[#22d3ee] mt-2">EXACTLY.</MaskLine>
+              <MaskLine delay={0.2} className="text-[#22d3ee] mt-2">NO ONE.</MaskLine>
             </h2>
             <Reveal as="p" delay={0.4} className="text-gray-400 mt-6 max-w-md relative z-10">
-              Asking a stranger feels awkward. Finding a teammate from another department feels impossible. So most people just stay quiet.
+              Asking a random stranger on Facebook feels sketchy. Asking a senior on Instagram feels awkward. So you just struggle alone.
             </Reveal>
           </div>
 

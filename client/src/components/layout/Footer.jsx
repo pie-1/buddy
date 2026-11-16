@@ -2,7 +2,8 @@
 import { useState } from "react";
 import { motion, useReducedMotion, AnimatePresence } from "framer-motion";
 import { MaskLine, Reveal, EASE } from "../features/Landing/Reveal";
-import { CheckCircle2, ArrowRight } from "lucide-react";
+import { CheckCircle2, ArrowRight, Loader2 } from "lucide-react";
+import api from "../../services/api";
 
 const PAGES = ["Home", "Manifesto", "Features", "Blog", "Careers", "Waitlist"];
 const FOLLOW = ["LinkedIn", "Twitter/X", "Instagram", "WhatsApp Channel", "YouTube"];
@@ -13,14 +14,9 @@ const WAVE = "M0,320L60,304C120,288,240,256,360,245.3C480,235,600,245,720,256C84
 function FootLink({ children, align = "left", delay = 0 }) {
   const reduce = useReducedMotion();
   return (
-    <motion.a
-      href="#"
-      initial={reduce ? false : { opacity: 0, y: 10 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
+    <motion.a href="#" initial={reduce ? false : { opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
       transition={{ duration: 0.5, delay, ease: EASE }}
-      className={`group relative w-fit text-sm text-gray-300 hover:text-white transition-colors ${align === "right" ? "md:ml-auto" : ""}`}
-    >
+      className={`group relative w-fit text-sm text-gray-300 hover:text-white transition-colors ${align === "right" ? "md:ml-auto" : ""}`}>
       {children}
       <span className={`absolute -bottom-0.5 h-px w-full scale-x-0 bg-indigo-400 transition-transform duration-300 group-hover:scale-x-100 ${align === "right" ? "origin-right" : "origin-left"}`} />
     </motion.a>
@@ -39,13 +35,18 @@ function Squiggle() {
 
 export default function Footer() {
   const [domain, setDomain] = useState("");
-  const [submitted, setSubmitted] = useState(false);
+  const [status, setStatus] = useState("idle"); // idle | loading | success | error
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     if (!domain.trim()) return;
-    // In a real app, POST this to your backend
-    setTimeout(() => setSubmitted(true), 800);
+    setStatus("loading");
+    try {
+      await api.post("/users/college-requests", { domain: domain.trim() });
+      setStatus("success");
+    } catch (err) {
+      setStatus("error");
+    }
   };
 
   return (
@@ -73,7 +74,6 @@ export default function Footer() {
             {PAGES.map((l, i) => <FootLink key={l} delay={0.05 * i}>{l}</FootLink>)}
           </div>
 
-          {/* CENTER: Short & Punchy Domain Form */}
           <div className="flex flex-col items-center justify-center text-center order-first md:order-none">
             <Reveal as="h3" className="text-3xl font-serif font-bold text-indigo-400 mb-2">Register your college</Reveal>
             <Reveal as="p" delay={0.1} className="text-[11px] text-gray-500 mb-6 uppercase tracking-widest font-semibold">
@@ -82,38 +82,24 @@ export default function Footer() {
             
             <Reveal delay={0.2} className="w-full max-w-sm">
               <AnimatePresence mode="wait">
-                {!submitted ? (
-                  <motion.form 
-                    key="form"
-                    onSubmit={handleRegister} 
-                    className="relative flex items-center w-full"
-                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, y: -10 }}
-                  >
-                    <input 
-                      type="text" 
-                      value={domain}
-                      onChange={(e) => setDomain(e.target.value)}
-                      placeholder="your.college.edu.np" 
-                      className="w-full bg-white/5 border border-white/10 rounded-full py-3.5 pl-5 pr-32 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
-                      required
-                    />
-                    <button 
-                      type="submit"
-                      className="absolute right-1.5 top-1.5 bottom-1.5 px-5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-full transition-colors flex items-center gap-1.5"
-                    >
-                      Request <ArrowRight size={14} />
+                {status !== "success" ? (
+                  <motion.form key="form" onSubmit={handleRegister} className="relative flex items-center w-full" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, y: -10 }}>
+                    <input type="text" value={domain} onChange={(e) => setDomain(e.target.value)} placeholder="your.college.edu.np" 
+                      className="w-full bg-white/5 border border-white/10 rounded-full py-3.5 pl-5 pr-32 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all disabled:opacity-50"
+                      disabled={status === "loading"} required />
+                    <button type="submit" disabled={status === "loading"}
+                      className="absolute right-1.5 top-1.5 bottom-1.5 px-5 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 text-white text-xs font-bold rounded-full transition-colors flex items-center gap-1.5">
+                      {status === "loading" ? <Loader2 size={14} className="animate-spin" /> : <>Request <ArrowRight size={14} /></>}
                     </button>
                   </motion.form>
                 ) : (
-                  <motion.div 
-                    key="success"
-                    initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-                    className="flex items-center justify-center gap-2 py-3.5 px-5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-full text-sm font-semibold"
-                  >
+                  <motion.div key="success" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+                    className="flex items-center justify-center gap-2 py-3.5 px-5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-full text-sm font-semibold">
                     <CheckCircle2 size={16} /> Request sent for review.
                   </motion.div>
                 )}
               </AnimatePresence>
+              {status === "error" && <p className="text-red-400 text-xs mt-2">Could not send request. It may already exist.</p>}
             </Reveal>
           </div>
 

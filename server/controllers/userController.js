@@ -7,6 +7,7 @@ import TeamRequest from "../models/TeamRequest.js";
 import Conversation from "../models/Conversation.js";
 import HelpPost from "../models/HelpPost.js";
 import { calculateCommonGround, getViewerPeers } from "../utils/commonGround.js"; 
+import CollegeRequest from "../models/CollegeRequest.js";
 
 export const getMyProfile = async (req, res) => {
   try {
@@ -201,3 +202,19 @@ async function computeMutual(viewerId, profileId) {
     return [];
   }
 }
+
+export const requestCollegeDomain = async (req, res) => {
+  try {
+    const { domain } = req.body;
+    if (!domain || domain.length < 5) {
+      return res.status(400).json({ message: "Valid domain required" });
+    }
+    const exists = await CollegeRequest.findOne({ domain });
+    if (exists) return res.status(400).json({ message: "Already requested." });
+
+    await CollegeRequest.create({ domain: domain.replace("@", "").toLowerCase() });
+    res.status(201).json({ message: "Request submitted for review." });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

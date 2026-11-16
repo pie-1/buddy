@@ -17,7 +17,7 @@
     "mongoose": "^9.12.0",
     "multer": "^2.5.0",
     "multer-storage-cloudinary-v2": "^1.0.3",
-    "nodemailer": "^10.4.0",
+    "nodemailer": "^10.6.0",
     "socket.io": "^4.8.4",
     "squish-image": "^1.0.0"
   },

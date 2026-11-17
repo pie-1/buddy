@@ -1,4 +1,3 @@
-// client/src/services/roommateService.js
 import api from "./api";
 
 export const fetchRoommates = async ({ kind, area, gender, roomType, minRent, maxRent, sort } = {}) => {

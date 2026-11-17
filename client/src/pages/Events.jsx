@@ -1,4 +1,3 @@
-// client/src/pages/Events.jsx
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -45,7 +44,6 @@ export default function Events() {
     <div className="min-h-screen bg-[#fafaf8]">
       <Navbar />
 
-      {/* soft warm backdrop */}
       <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[900px] h-[400px] pointer-events-none" style={{ background: "radial-gradient(ellipse, rgba(251,146,60,.08), transparent 65%)" }} />
 
       <div className="relative max-w-6xl mx-auto pt-32 pb-24 px-4 sm:px-6">

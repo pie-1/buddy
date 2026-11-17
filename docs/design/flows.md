@@ -1,5 +1,0 @@
-{
-  "interactions": [],
-  "scrollBehaviors": [],
-  "forms": []
-}

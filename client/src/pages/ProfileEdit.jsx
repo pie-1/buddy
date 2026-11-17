@@ -1,4 +1,3 @@
-// client/src/pages/ProfileEdit.jsx
 import { useEffect, useState, useContext } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -97,51 +96,46 @@ export default function ProfileEdit() {
     }
   };
 
-  const submit = async (e) => {
-    e.preventDefault();
-    if (success) return; 
+const submit = async (e) => {
+  e.preventDefault();
+  if (success) return;
+  setSaving(true);
+  setError("");
 
-    setSaving(true);
-    setError("");
+  const gradYear = Number(form.graduationYear);
+  if (!Number.isFinite(gradYear) || gradYear < 2015 || gradYear > 2035) {
+    setError("Graduation year must be between 2015 and 2035.");
+    setSaving(false);
+    return;
+  }
 
-    const gradYear = Number(form.graduationYear);
-    if (!Number.isFinite(gradYear) || gradYear < 2015 || gradYear > 2035) {
-      setError("Graduation year must be between 2015 and 2035.");
-      setSaving(false);
-      return;
+  const cleanSocials = Object.fromEntries(
+    Object.entries(form.socials)
+      .map(([k, v]) => [k, String(v ?? "").trim()])
+      .filter(([, v]) => v.length > 0)
+  );
+
+  try {
+    const payload = { ...form, graduationYear: gradYear, socials: cleanSocials, skills };
+    const updated = await updateMyProfile(payload);
+
+    if (updateUser) {
+      updateUser({
+        name: updated.name,
+        avatar: updated.avatar,
+        trustScore: updated.trustScore,
+      });
     }
 
-    // Build payload carefully
-    const cleanSocials = Object.fromEntries(
-      Object.entries(form.socials)
-        .map(([k, v]) => [k, String(v ?? "").trim()])
-        .filter(([, v]) => v.length > 0)
-    );
-
-    try {
-      const payload = { ...form, graduationYear: gradYear, socials: cleanSocials, skills };
-      
-      // 1. Send to backend
-      const updated = await updateMyProfile(payload);
-      
-      // 2. Update global React Context
-      if (updateUser) {
-        updateUser({ name: updated.name, avatar: updated.avatar });
-      }
-      
-      // 3. Lock the UI and redirect
-      setSuccess(true);
-      setTimeout(() => navigate(`/profile/${me._id}`), 900);
-      
-    } catch (err) {
-      console.error("CATCH BLOCK HIT:", err);
-      // Show the specific backend error if it exists, otherwise show the generic one
-      const data = err.response?.data;
-      setError(data?.message || "Could not save profile changes.");
-      setSaving(false);
-    }
-  };
-
+    setSuccess(true);
+    setTimeout(() => navigate(`/profile/${me._id}`), 900);
+  } catch (err) {
+    const data = err.response?.data;
+    setError(data?.message || "Could not save profile changes.");
+    setSaving(false);
+  }
+};
+s
   if (loading) {
     return (
       <div className="min-h-screen bg-[#fafaf8]">
@@ -190,7 +184,6 @@ export default function ProfileEdit() {
           transition={{ duration: 0.6, delay: 0.1, ease: EASE }}
           className="bg-white border border-stone-200 rounded-2xl p-6 md:p-8 space-y-6 shadow-sm"
         >
-          {/* Avatar */}
           <div>
             <h2 className="text-sm font-bold uppercase tracking-widest text-stone-400 border-b border-stone-100 pb-2 mb-4">Photo</h2>
             <div className="flex items-center gap-4">
@@ -229,7 +222,6 @@ export default function ProfileEdit() {
             </div>
           </div>
 
-          {/* Basics */}
           <div className="space-y-5">
             <h2 className="text-sm font-bold uppercase tracking-widest text-stone-400 border-b border-stone-100 pb-2">Basics</h2>
 
@@ -258,7 +250,6 @@ export default function ProfileEdit() {
             </div>
           </div>
 
-          {/* Education */}
           <div className="space-y-5">
             <h2 className="text-sm font-bold uppercase tracking-widest text-stone-400 border-b border-stone-100 pb-2">Education</h2>
 
@@ -294,7 +285,6 @@ export default function ProfileEdit() {
             </div>
           </div>
 
-          {/* Skills */}
           <div className="space-y-4">
             <h2 className="text-sm font-bold uppercase tracking-widest text-stone-400 border-b border-stone-100 pb-2">Skills</h2>
 
@@ -336,7 +326,6 @@ export default function ProfileEdit() {
             )}
           </div>
 
-          {/* Socials */}
           <div className="space-y-5">
             <h2 className="text-sm font-bold uppercase tracking-widest text-stone-400 border-b border-stone-100 pb-2">Links</h2>
 
@@ -360,7 +349,6 @@ export default function ProfileEdit() {
             </div>
           </div>
 
-          {/* Feedback */}
           {error && (
             <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm font-medium animate-in fade-in slide-in-from-top-2">
               {error}

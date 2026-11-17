@@ -1,4 +1,3 @@
-// server/controllers/eventController.js
 import Event from "../models/Event.js";
 
 export const createEvent = async (req, res) => {
@@ -54,15 +53,19 @@ export const getAllEvents = async (req, res) => {
     const now = new Date();
 
     const events = await Event.find(filter)
-      .populate("organizerId", "name university spotlightUntil")
+      .populate("organizerId", "name university")
       .sort({ date: 1 })
       .limit(100);
 
-    // Spotlight organizers' events float to top
     events.sort((a, b) => {
-      const aSpot = a.organizerId?.spotlightUntil && a.organizerId.spotlightUntil > now ? 1 : 0;
-      const bSpot = b.organizerId?.spotlightUntil && b.organizerId.spotlightUntil > now ? 1 : 0;
-      if (aSpot !== bSpot) return bSpot - aSpot;
+      const aEventSpot = a.spotlightUntil && a.spotlightUntil > now ? 1 : 0;
+      const bEventSpot = b.spotlightUntil && b.spotlightUntil > now ? 1 : 0;
+      if (aEventSpot !== bEventSpot) return bEventSpot - aEventSpot;
+      
+      const aOrgSpot = a.organizerId?.spotlightUntil && a.organizerId.spotlightUntil > now ? 1 : 0;
+      const bOrgSpot = b.organizerId?.spotlightUntil && b.organizerId.spotlightUntil > now ? 1 : 0;
+      if (aOrgSpot !== bOrgSpot) return bOrgSpot - aOrgSpot;
+      
       if (sort === "date-desc") return new Date(b.date) - new Date(a.date);
       return new Date(a.date) - new Date(b.date);
     });

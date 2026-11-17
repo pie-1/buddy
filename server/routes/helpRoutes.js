@@ -1,4 +1,3 @@
-// server/routes/helpRoutes.js
 import express from "express";
 import {
   createHelpPost, getHelpPosts, getHelpPostById,

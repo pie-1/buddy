@@ -1,209 +1,330 @@
-## buddy
+<div align="center">
 
-step1 : sitemap
-PUBLIC
-├── Landing
-├── Browse Marketplace (buy/sell, borrow/rent)
-├── Events
-├── Student Spotlight (weekly top 3)
-└── About / Open Source (maintainers, how to contribute, who reviews PRs)
+# 🎓 CollegeBuddy
 
-AUTH
-├── Sign up → college email domain check → OTP/verify link
-└── Fallback: manual verification request (if applicable — pending your answer)
+**The verified campus network for Nepali universities.**
+Buy, sell, rent, find roommates, join events, build teams, and connect — all from one place.
 
-STUDENT APP (authenticated, verified)
-├── Dashboard
-│   ├── My listings / borrow requests (status: active, requested, confirmed, completed)
-│   ├── My RSVPs & teammate posts
-│   ├── Chat inbox summary
-│   ├── Verification + reputation status
-│   └── Spotlight status (if purchased this week)
-├── Marketplace
-│   ├── Buy/Sell listings
-│   ├── Borrow/Rent listings (cost + deadline fields)
-│   ├── Listing detail → Request → contextual chat thread
-│   └── My listings (create/edit/close)
-├── Events
-│   ├── Event feed (filter: department/college/date)
-│   ├── Event detail → RSVP → reminder
-│   └── Teammate board per event (if we attach it here)
-├── Projects & Teammates
-│   ├── Post project (title, dept, skills, roles needed)
-│   ├── Browse/apply → contextual chat
-│   └── My posts / applications
-├── Roommates
-│   ├── Listings with filters
-│   ├── Listing detail → chat
-│   └── My listing
-├── Community / Connect  ← form TBD by your answer
-├── Chat (unified inbox)
-│   └── All threads carry context: listing:123 / event:456 / project:789 / roommate:012
-└── Profile
-    ├── Verification badge, department, college
-    ├── Reputation (completed exchanges, ratings)
-    ├── Spotlight purchase entry point
-    └── Public view (linkable)
+[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![Made with MERN](https://img.shields.io/badge/MERN-Stack-3c873a)](https://www.mongodb.com/mern-stack)
 
-ADMIN DASHBOARD (role: moderator/admin — club only)
-├── Verification queue (email domain whitelist mgmt, manual approvals)
-├── Moderation (listings, profiles, reports)
-├── Dispute/report queue
-├── Spotlight management (verify Rs 100 payment proof → assign 3 slots)
-├── Event management (if club-created)
-├── User management (roles: student / moderator / admin)
-└── Analytics (DAU, listings, completions, RSVPs, spotlight revenue)
+[Overview](#overview) · [Features](#features) · [Tech Stack](#tech-stack) · [Getting Started](#getting-started) · [Contributing](#contributing) · [Roadmap](#roadmap)
 
+</div>
 
-# Auth and verification
-   1. Sign up → enter college email
-   2. System checks domain against whitelist ──✗→ reject ("use your college email")
-   3. Send OTP / magic link
-   4. Verify → account created (role: student, verified: true)
-   5. Onboarding: department, year, college, display name, photo
-   6. Profile live → can now access all features
+---
 
-# Marketplace — Buy/Sell
-    1. Seller creates listing: title, photos, price, category, condition, description
-    2. Listing published (auto, reportable)
-    3. Buyer browses → listing detail
-    4. Buyer taps "Request" ──→ opens chat thread [context:listing:<id>]
-    5. Negotiation in chat (off-platform payment, in-person handoff)
-    6. Either party taps "Mark as sold" → other confirms
-    7. Both prompted to rate each other → reputation updated
-    8. Listing → status: sold, hidden from browse
+## Overview
 
-# Marketplace — Borrow/Rent
-    Listing fields: rental cost + period (per day/week) + return deadline + deposit (optional, shown only)
-    4a. Borrower requests with proposed borrow window
-    6a. Return confirmed by both → reputation updated
+CollegeBuddy is an open-source, university-verified social platform built for students across Nepal. Every account is tied to a real `.edu.np` email domain — no fake profiles, no anonymous scammers, just your campus community.
 
-# Events
-    1. Student/club creates event: title, description, photos, date/time, venue + map pin,
-    department/college visibility, capacity (optional)
-    2. Event published (auto, reportable)
-    3. Attendee browses feed → filters (dept, college, date, type)
-    4. Event detail → "Interested" / "Going" (RSVP)
-    5. Reminder notification (e.g. 24h before)
-    6. Attendee can start a group chat thread [context:event:<id>] for coordination
-    7. Post-event: optional feedback / rating
+The project is a **MERN stack application** (MongoDB, Express, React, Node.js) built to be:
+- **Verified** — only students with valid college emails can join
+- **Contextual** — every chat is tied to a listing, event, project, or roommate post
+- **Reputation-first** — trust scores reward real participation
+- **Open source** — built in public, maintained by students, for students
 
-# Projects & Teammates
-    1. Poster creates project: title, description, skills/roles needed, dept, deadline
-    2. Project published
-    3. Others browse/filter → project detail
-    4. Applicant taps "Apply" (short pitch) ──→ chat thread [context:project:<id>]
-    5. Poster reviews applicants → accepts/rejects in-app
-    6. Accepted applicants shown as "team" on project page
-    7. Project → status: recruiting / in-progress / closed
+---
 
-# Roommates / Flatmates
-    1. Lister creates listing: photos, rent, location (map pin), area/neighborhood,
-    room type, gender preference, furnishing, amenities, move-in date, lease duration
-    2. Listing published
-    3. Seeker browses → filters (area, budget, gender pref, move-in date, amenities) + map view
-    4. Listing detail → "Request contact / chat" ──→ chat thread [context:roommate:<id>]
-    5. Conversation off-platform → either party marks "filled"
-    6. Rating optional
+## Features
 
-# Community / Connect (proposed default — confirm)
-    7a. Directory
-    1. Browse verified students (filter: dept, college, year, skills/interests)
-    2. Profile view (public profile) → "Message" ──→ chat [context:profile:<id>]
+### 🛒 Marketplace
+- Buy, sell, or rent items within your campus
+- Photo + PDF attachments per listing
+- In-context chat with the seller
+- Owner-managed listing status (Available / Sold / Rented / Hidden)
+- Trust score awarded on successful sale
 
-    7b. Anonymous Help / PYQ board
-    1. Post anonymously (still tied to verified account internally)
-    2. Others reply → replies are also anonymous or named (poster's choice)
-    3. Upvote best answers → karma
-    TG-8: anonymity is display-only; identity retained for admin moderation
+### 🏠 Roommates
+- Post and browse room listings with map pins
+- Filter by area, budget, gender preference, move-in date
+- Chat directly with the lister
 
-    7c. Cross-department discovery feed
-    1. Aggregated feed: recent events, projects, roommate listings, help posts
-    2. Filter by department / college
+### 🎉 Events & Team Formation
+- Discover events filtered by department and college
+- RSVP with "Interested" / "Going"
+- Post team requests per event to find collaborators
+- Get reminders 24h before
 
-# Unified Chat (cross-cutting spine)
-    Every chat thread has: participants[], contextType, contextId
-    Context types: listing | event | project | roommate | profile | support
+### 🤝 Campus Directory
+- Browse verified students by name, department, skills
+- Public profile with Buddy Pass card
+- Like and message anyone in the directory
+- "Why you should connect" suggestions based on shared traits
 
-    1. User opens chat inbox → grouped by context ("Marketplace", "Events", "Projects", "Roommates", "Direct")
-    2. Opening a thread from any feature reuses the same thread if context+participants match
-    3. Chat supports: text, images, listing/event/project card preview, "Mark as done" action
-    4. "Mark as done" is the universal completion trigger → fires the feature-specific confirm step
-    5. Block / report user → admin queue
+### 💬 Unified Chat
+- One inbox for all conversations
+- Every thread carries context: `listing:123`, `event:456`, `profile:789`
+- Text, images, and contextual previews
+- Report and block from any thread
 
-# Spotlight (weekly)
-    WEEK N-1 (prep)
-    1. Student opens Spotlight page → sees club eSewa ID/QR + "Rs 100 for next week"
-    2. Pays externally → submits txn ID + screenshot → claim created (status: pending)
-    3. TG-11: admin matches claim vs eSewa statement → verify / reject
-    4. Verified claims queued in payment order
+### ⭐ Spotlight
+- Weekly top-3 profile promotion
+- Paid placement via eSewa (Rs. 100/week)
+- Admin-verified payment proofs
+- Automatic fallback to high-activity students when slots are unfilled
 
-    WEEK N (Mon 00:00 – Sun 23:59)
-    5. On Monday 00:00, first 3 verified claims assigned slots → profiles pinned on Spotlight page
-    6. If <3 verified claims: remaining slots filled by highest activity/reach score (proposed formula above)
-    7. Slot profiles appear: pinned on Spotlight page, badge on profile, "Spotlight" chip on their listings
-    8. End of Sunday 23:59 → slots expire, history logged
+### 📊 Trust Score System
+Every real action earns you trust:
+| Action | Points |
+|---|---|
+| Email verified | +5 |
+| Profile completed | +10 |
+| Listing sold | +5 |
+| Event attended | +3 |
+| Answer accepted | +8 |
+| Spotlight verified | +10 |
+| Admin verification | +2 |
+| Admin claim review | +1 |
 
-# Admin Dashboard
-A. Verification queue
-   1. Domain whitelist management (add/remove colleges)
-   2. Email verification edge cases (failed OTP resends, blocked domains)
-   TG: domain changes are admin-only
+Trust tiers: **Newcomer** (0-19) → **Trusted** (20-49) → **Respected** (50-99) → **Elite** (100+)
 
-B. Spotlight queue
-   1. Pending Rs 100 claims (txn ID + screenshot)
-   2. Match against eSewa statement → Verify / Reject
-   3. Manual slot override (activity fallback)
-   TG: verification is admin-only
+### 🛡️ Admin Dashboard
+- Domain verification queue
+- Spotlight payment approvals
+- User management (roles: student / moderator / admin)
+- Moderation reports and disputes
+- Platform analytics
 
-C. Moderation
-   1. Reported listings / events / profiles / chat messages
-   2. Actions: dismiss / hide / remove / warn / ban
-   TG: all moderation actions logged with reason
+---
 
-D. Disputes
-   1. "Mark as sold/returned" contested → dispute opened by either party
-   2. Admin views chat thread context + evidence
-   3. Resolve: complete / cancel / warn
-   TG: resolution logged
+## Tech Stack
 
-E. User management
-   1. Role assignment: student / moderator / admin
-   2. Ban / unban
-   TG: admin-only
+| Layer | Technology |
+|---|---|
+| **Frontend** | React 18 + Vite + Tailwind CSS + Framer Motion |
+| **Backend** | Node.js + Express |
+| **Database** | MongoDB Atlas (Mongoose ODM) |
+| **Real-time** | Socket.io |
+| **File Storage** | Cloudinary |
+| **Email** | Nodemailer (Gmail SMTP) |
+| **Auth** | JWT + OTP email verification |
 
-F. Analytics
-   - DAU, new signups, verification rate
-   - Active listings by type, completion rate
-   - Event RSVPs, project posts/applications
-   - Spotlight claims + revenue
-   - Report/dispute volume
+---
 
+## Getting Started
 
-# Refined activity score (for spotlight fallback slots)
-    score =
-    (completed_exchanges_30d        × 5.0)
-    + (active_listings_30d             × 2.0)
-    + (event_rsvps_attended_30d        × 1.5)
-    + (project_applications_30d        × 2.5)
-    + (help_board_upvotes_received_30d × 1.0)
-    + (profile_views_7d                × 0.2)
-    + (spotlight_verified_claims_90d   × 3.0)   // reward repeat supporters
-    − (reports_upheld_30d              × 10.0)  // quality 
-    # Rules:
+### Prerequisites
 
-        Window: only actions from the last 30 days count (except profile views at 7d and spotlight at 90d). This avoids legacy inflation.
+- **Node.js** v18 or higher
+- **npm** v9 or higher
+- **Git**
+- A **MongoDB Atlas** account (free tier works)
+- A **Cloudinary** account (free tier works)
+- A **Gmail** account with [App Password](https://support.google.com/accounts/answer/185833) enabled
 
-        Cap per category: no single category can contribute >40% of total score, so one power-user behaviour doesn't dominate.
+### 1. Clone the repository
 
-        Tie-breaker: earlier verified claim timestamp wins; if no claims, account age (older verified account ranks higher).
+```bash
+git clone https://github.com/pie-1/buddy.git
+cd buddy
+```
 
-        Audit: expose the score breakdown to admins so fallback slot assignment is explainable, not a black box.
+### 2. Install dependencies
 
-        Store as activityScore on the user document, recomputed nightly + on relevant events. This keeps spotlight assignment deterministic at Monday 00:00.
+```bash
+# Backend
+cd server
+npm install
 
-# Automatic spotlight payment
-    unpaid  →  initiating (redirect/popup to eSewa)
-            →  verifying  (polling / webhook received, status pending)
-            →  verified   (slot queued; show rank if within top 3)
-            →  rejected   (transaction failed; retry CTA)
+# Frontend
+cd ../client
+npm install
+```
+
+### 3. Set up environment variables
+
+**Backend** — create `server/.env`:
+
+```env
+# Server
+PORT=5000
+NODE_ENV=development
+CLIENT_URL=http://localhost:5173
+
+# Database (MongoDB Atlas)
+MONGO_URI=mongodb+srv://<user>:<password>@<cluster>.mongodb.net/buddy?retryWrites=true&w=majority
+
+# Auth
+JWT_SECRET=your_long_random_secret
+ADMIN_INVITE_CODE=your_admin_invite_code
+
+# Cloudinary
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+
+# Email (Gmail App Password)
+EMAIL_USER=your_email@gmail.com
+EMAIL_PASS=your_app_password
+```
+
+**Frontend** — create `client/.env`:
+
+```env
+VITE_API_URL=http://localhost:5000/api
+```
+
+> 💡 **Backend `.env.example`** and **frontend `.env.example`** are committed to the repo. Copy them:
+> ```bash
+> cp server/.env.example server/.env
+> cp client/.env.example client/.env
+> ```
+
+### 4. Run the app
+
+**Terminal 1 — Backend:**
+```bash
+cd server
+npm run dev
+```
+
+**Terminal 2 — Frontend:**
+```bash
+cd client
+npm run dev
+```
+
+Open [http://localhost:5173](http://localhost:5173) in your browser.
+
+You should see:
+- Backend: `MongoDB Connected: ac-xxx-shard-00-01.mongodb.net`
+- Frontend: the CollegeBuddy landing page
+
+### 5. Register a test account
+
+1. Click **Get started**
+2. Use a valid `.edu.np` email (e.g. `test@acme.edu.np`)
+3. Check your Gmail inbox for the OTP (also logged to the backend terminal in dev)
+4. Enter the OTP → verify → you're in
+
+### 6. Create an admin account (optional)
+
+Register with a different email, then in `server/.env` set `ADMIN_INVITE_CODE` and use it during signup with role `admin`.
+
+---
+
+## Project Structure
+
+```
+buddy/
+├── client/                    # React frontend
+│   ├── src/
+│   │   ├── components/        # Reusable UI + feature components
+│   │   │   ├── features/      # Feature-scoped components
+│   │   │   ├── layout/        # Navbar, Footer
+│   │   │   └── ui/            # Generic primitives
+│   │   ├── constants/         # Shared constants (categories, statuses)
+│   │   ├── context/           # AuthContext, SocketContext
+│   │   ├── pages/             # Route-level pages
+│   │   ├── services/          # API client wrappers
+│   │   └── utils/             # Helper functions
+│   ├── Dockerfile
+│   └── nginx.conf
+├── server/                    # Express backend
+│   ├── config/                # DB + Cloudinary config
+│   ├── controllers/           # Route handlers
+│   ├── middlewares/           # Auth, validation
+│   ├── models/                # Mongoose schemas
+│   ├── routes/                # Express routers
+│   ├── sockets/               # Socket.io handlers
+│   ├── utils/                 # Shared helpers (trustScore, email, etc.)
+│   └── Dockerfile
+└── docker-compose.yml
+```
+
+---
+
+## Contributing
+
+We welcome contributions from students and developers of all skill levels.
+
+### How to contribute
+
+1. **Fork** the repository
+2. **Create a branch** for your change:
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+3. **Make your changes** — follow the existing code style
+4. **Test locally** — make sure `npm run dev` works on both client and server
+5. **Commit** with a clear message:
+   ```bash
+   git commit -m "feat: add roommate filter by move-in date"
+   ```
+6. **Push** and open a **Pull Request**
+
+### Commit message convention
+
+We use [Conventional Commits](https://www.conventionalcommits.org/):
+
+```
+feat:     new feature
+fix:      bug fix
+docs:     documentation only
+style:    formatting, no code change
+refactor: code change that doesn't add/fix anything
+test:     adding tests
+chore:    maintenance
+```
+
+### What to work on
+
+- Check the [Issues](https://github.com/pie-1/buddy/issues) tab — look for `good first issue` labels
+- Read feature docs in `docs/features/` before starting
+- Comment on the issue to claim it before opening a PR
+
+### Code style
+
+- **Frontend**: 2 spaces, functional components, hooks over classes
+- **Backend**: 2 spaces, `async/await` over callbacks, controllers return JSON
+- **Comments**: explain *why*, not *what*
+- **Names**: `PascalCase` for components, `camelCase` for functions/variables, `UPPER_SNAKE` for constants
+
+### Never commit
+
+- `.env` files (only `.env.example`)
+- `node_modules/`
+- `dist/` or `build/`
+- Editor-specific files (`.vscode/`, `.idea/`) unless explicitly needed
+
+---
+
+## Roadmap
+
+- [x] Auth with `.edu.np` email verification
+- [x] Marketplace with buy/sell/rent
+- [x] Roommates with map-based listings
+- [x] Events with RSVP and team formation
+- [x] Campus directory with trust scores
+- [x] Unified chat with context
+- [x] Spotlight with admin verification
+- [x] Admin dashboard
+- [ ] Docker + one-command local setup
+- [ ] Automated tests (Jest + React Testing Library)
+- [ ] Mobile app (React Native)
+- [ ] Escrow payments for marketplace
+- [ ] Public API for third-party integrations
+
+---
+
+## License
+
+This project is licensed under the **MIT License** — see [LICENSE](LICENSE) for details.
+
+---
+
+## Maintainers
+
+- **Pawan Singh** ([@pie-1](https://github.com/pie-1))
+
+---
+
+<div align="center">
+
+**Built with ❤️ by students, for students.**
+
+If this project helped you, give it a ⭐ on GitHub — it means a lot.
+
+</div>

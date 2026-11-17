@@ -1,4 +1,3 @@
-// client/src/components/layout/Footer.jsx
 import { useState } from "react";
 import { motion, useReducedMotion, AnimatePresence } from "framer-motion";
 import { MaskLine, Reveal, EASE } from "../features/Landing/Reveal";
@@ -35,7 +34,7 @@ function Squiggle() {
 
 export default function Footer() {
   const [domain, setDomain] = useState("");
-  const [status, setStatus] = useState("idle"); // idle | loading | success | error
+  const [status, setStatus] = useState("idle"); 
 
   const handleRegister = async (e) => {
     e.preventDefault();

@@ -1,4 +1,3 @@
-// client/src/services/listingService.js
 import api from "./api";
 
 export const fetchListings = async ({ category, search, sort } = {}) => {
@@ -23,6 +22,11 @@ export const createListing = async (payload) => {
 
 export const updateListing = async (id, payload) => {
   const { data } = await api.put(`/listings/${id}`, payload);
+  return data;
+};
+
+export const updateListingStatus = async (id, status) => {
+  const { data } = await api.patch(`/listings/${id}/status`, { status });
   return data;
 };
 

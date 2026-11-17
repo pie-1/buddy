@@ -1,0 +1,8 @@
+# server/.dockerignore
+node_modules
+.env
+.env.*
+npm-debug.log*
+.git
+.gitignore
+README.md

@@ -1,13 +1,7 @@
 // client/src/components/features/Marketplace/FilterBar.jsx
 import { Search, SlidersHorizontal } from "lucide-react";
 import { motion } from "framer-motion";
-
-const CATEGORIES = [
-  { value: "all", label: "All categories" },
-  { value: "sell", label: "Buy / Sell" },
-  { value: "rent", label: "Rent" },
-  { value: "borrow", label: "Borrow" },
-];
+import { CATEGORY_OPTIONS } from "../../../constants/marketplace";
 
 const SORTS = [
   { value: "newest", label: "Newest first" },
@@ -44,8 +38,11 @@ export default function FilterBar({ category, sort, search, onCategoryChange, on
             onChange={(e) => onCategoryChange(e.target.value)}
             className="bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-3 text-white text-sm focus:outline-none focus:border-indigo-500 cursor-pointer appearance-none transition-colors min-w-[170px]"
           >
-            {CATEGORIES.map((c) => (
-              <option key={c.value} value={c.value} className="bg-[#14121f]">{c.label}</option>
+            <option value="all" className="bg-[#14121f]">All categories</option>
+            {CATEGORY_OPTIONS.map((c) => (
+              <option key={c.value} value={c.value} className="bg-[#14121f]">
+                {c.label}
+              </option>
             ))}
           </select>
         </div>
@@ -56,7 +53,9 @@ export default function FilterBar({ category, sort, search, onCategoryChange, on
           className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-indigo-500 cursor-pointer appearance-none transition-colors min-w-[170px]"
         >
           {SORTS.map((s) => (
-            <option key={s.value} value={s.value} className="bg-[#14121f]">{s.label}</option>
+            <option key={s.value} value={s.value} className="bg-[#14121f]">
+              {s.label}
+            </option>
           ))}
         </select>
       </div>

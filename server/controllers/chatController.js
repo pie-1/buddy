@@ -1,4 +1,3 @@
-// server/controllers/chatController.js
 import Conversation from "../models/Conversation.js";
 import Message from "../models/Message.js";
 
@@ -22,8 +21,6 @@ export const startConversation = async (req, res) => {
       return res.status(400).json({ message: "Cannot start a conversation with yourself" });
     }
 
-    // Industrial Logic: For "direct" chats, don't care about contextId, just check if they talk at all.
-    // For contextual (listing/event), ensure we find the specific thread.
     const query = {
       participants: { $all: [req.user._id, recipientId], $size: 2 },
       status: "open",
@@ -63,8 +60,6 @@ export const getMyConversations = async (req, res) => {
       .sort({ updatedAt: -1 })
       .limit(100);
 
-    // Deduplicate in memory just in case the DB has old duplicates
-    // Group by the "other" user's ID. Keep the most recently updated one.
     const uniqueMap = new Map();
     
     conversations.forEach(c => {
@@ -72,7 +67,6 @@ export const getMyConversations = async (req, res) => {
       if (!other) return;
       const otherId = other._id.toString();
       
-      // If we haven't seen this user yet, OR if this conversation is newer, keep it.
       if (!uniqueMap.has(otherId) || uniqueMap.get(otherId).updatedAt < c.updatedAt) {
         uniqueMap.set(otherId, c);
       }

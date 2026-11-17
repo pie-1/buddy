@@ -1,4 +1,3 @@
-// server/routes/spotlightRoutes.js
 import express from "express";
 import {
   getCurrentSpotlight, submitClaim, getMyClaims,

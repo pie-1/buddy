@@ -1,4 +1,3 @@
-// server/models/HelpPost.js
 import mongoose from "mongoose";
 
 const helpPostSchema = new mongoose.Schema(

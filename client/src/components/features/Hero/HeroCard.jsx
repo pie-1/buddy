@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { STUDENT as S } from "./studentData";
 
 const Label = ({ children, className = "" }) => (
-  <span className={`block text-[7px] md:text-[8px] text-gray-400 uppercase tracking-widest font-medium ${className}`}>{children}</span>
+  <span className={`block text-[7px] md:text-[8px] text-stone-500 uppercase tracking-widest font-medium ${className}`}>{children}</span>
 );
 
 const QR = [
@@ -12,9 +12,9 @@ const QR = [
 
 function MiniQR() {
   return (
-    <div aria-hidden className="grid grid-cols-7 gap-[1.5px] p-1 md:p-1.5 rounded-md bg-white shrink-0 border border-gray-100">
+    <div aria-hidden className="grid grid-cols-7 gap-[1.5px] p-1 md:p-1.5 rounded-md bg-white shrink-0 border border-stone-200">
       {QR.flatMap((row, r) => row.split("").map((c, i) => (
-        <span key={`${r}-${i}`} className={`w-[2px] h-[2px] md:w-[3px] md:h-[3px] ${c === "1" ? "bg-gray-900" : "bg-transparent"}`} />
+        <span key={`${r}-${i}`} className={`w-[2px] h-[2px] md:w-[3px] md:h-[3px] ${c === "1" ? "bg-stone-900" : "bg-transparent"}`} />
       )))}
     </div>
   );
@@ -28,7 +28,6 @@ export function HeroCard({ cardRef, passRef, scale, y, hintOpacity }) {
         transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
         className="absolute inset-0"
       >
-        {/* Hint Pill */}
         <motion.div
           style={{ opacity: hintOpacity }}
           className="absolute -top-14 md:-top-16 left-1/2 -translate-x-1/2 z-30 whitespace-nowrap px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-white/90 border border-indigo-100 text-[11px] md:text-[13px] font-medium text-indigo-600 flex items-center gap-1.5 md:gap-2 shadow-lg backdrop-blur-sm"
@@ -38,64 +37,59 @@ export function HeroCard({ cardRef, passRef, scale, y, hintOpacity }) {
           <span className="hidden [@media(hover:none)]:inline">Scroll to unlock your pass</span>
         </motion.div>
 
-        <div className="absolute bottom-full left-1/2 -translate-x-1/2 w-[1.5px] h-[70vh] bg-gradient-to-b from-transparent via-gray-200 to-gray-300" />
-        <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-30 w-5 h-6 rounded-md bg-gray-100 border border-gray-200 shadow-sm grid place-items-center">
-          <span className="w-2 h-2 rounded-full bg-gray-300" />
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 w-[1.5px] h-[70vh] bg-gradient-to-b from-transparent via-stone-300 to-stone-400" />
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-30 w-5 h-6 rounded-md bg-stone-200 border border-stone-300 shadow-sm grid place-items-center">
+          <span className="w-2 h-2 rounded-full bg-stone-400" />
         </div>
 
-        {/* FRONT: Paper ID */}
-        <div className="absolute inset-0 rounded-2xl overflow-hidden bg-gradient-to-br from-[#fdfcfa] to-[#f4f3ee] border border-[#e5e3db] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.15)] flex flex-col z-10 p-4 md:p-6">
+        {/* FRONT: Paper ID — warm light gray-orange blend */}
+        <div className="absolute inset-0 rounded-2xl overflow-hidden bg-gradient-to-br from-[#f7f3ee] via-[#f5f0e8] to-[#f0e8dd] border border-[#d8cfc2] shadow-[0_30px_60px_-15px_rgba(120,80,40,0.15)] flex flex-col z-10 p-4 md:p-6">
           
-          {/* Header */}
-          <div className="text-center pb-3 md:pb-4 border-b border-gray-200/60">
-            <b className="block text-[9px] md:text-[10px] tracking-[0.15em] uppercase text-gray-800 font-serif">{S.university}</b>
-            <small className="block text-[6px] md:text-[7px] tracking-[0.2em] uppercase text-gray-400 mt-1">Official University Identification</small>
+          <div className="text-center pb-3 md:pb-4 border-b border-stone-300/50">
+            <b className="block text-[9px] md:text-[10px] tracking-[0.15em] uppercase text-stone-800 font-serif">{S.university}</b>
+            <small className="block text-[6px] md:text-[7px] tracking-[0.2em] uppercase text-stone-500 mt-1">Official University Identification</small>
           </div>
 
-          {/* Photo Placeholder */}
-          <div className="mt-4 md:mt-6 mb-4 md:mb-5 mx-auto w-20 h-24 md:w-24 md:h-28 bg-gradient-to-br from-[#f0efec] to-[#e5e4e0] rounded-md border border-[#dcdad5] grid place-items-center shadow-inner">
-             <svg className="w-8 h-8 md:w-10 md:h-10 text-gray-300" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+          <div className="mt-4 md:mt-6 mb-4 md:mb-5 mx-auto w-20 h-24 md:w-24 md:h-28 bg-gradient-to-br from-[#e8dfd2] to-[#ddd3c3] rounded-md border border-[#cfc4b2] grid place-items-center shadow-inner">
+            <svg className="w-8 h-8 md:w-10 md:h-10 text-stone-400" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
               <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
             </svg>
           </div>
 
-          {/* Details */}
           <div className="flex-1 flex flex-col gap-2 md:gap-3">
             <div>
               <Label>Name</Label>
-              <p className="text-[13px] md:text-[15px] font-semibold text-gray-800 tracking-wide mt-0.5">{S.name}</p>
+              <p className="text-[13px] md:text-[15px] font-semibold text-stone-800 tracking-wide mt-0.5">{S.name}</p>
             </div>
             
             <div className="grid grid-cols-2 gap-3 md:gap-4">
               <div>
                 <Label>Roll No.</Label>
-                <p className="font-mono text-[10px] md:text-[11px] text-gray-600 mt-0.5">{S.roll}</p>
+                <p className="font-mono text-[10px] md:text-[11px] text-stone-700 mt-0.5">{S.roll}</p>
               </div>
               <div>
                 <Label>Branch</Label>
-                <p className="text-[10px] md:text-[11px] text-gray-600 mt-0.5">{S.program}</p>
+                <p className="text-[10px] md:text-[11px] text-stone-700 mt-0.5">{S.program}</p>
               </div>
             </div>
 
             <div>
               <Label>University Email</Label>
-              <p className="font-mono text-[10px] md:text-[11px] text-gray-600 mt-0.5">{S.email}</p>
+              <p className="font-mono text-[10px] md:text-[11px] text-stone-700 mt-0.5">{S.email}</p>
             </div>
           </div>
 
-          {/* Warning Banner */}
-          <div className="mt-auto mb-3 md:mb-4 px-2 py-1 md:py-1.5 text-[7px] md:text-[8px] text-center text-red-600 bg-red-50 border border-red-200 border-dashed rounded font-bold uppercase tracking-wider">
+          <div className="mt-auto mb-3 md:mb-4 px-2 py-1 md:py-1.5 text-[7px] md:text-[8px] text-center text-red-700 bg-red-50 border border-red-200 border-dashed rounded font-bold uppercase tracking-wider">
             ⚠ Library Dues Pending: Rs. 150
           </div>
 
-          {/* Barcode */}
           <div className="mt-auto flex flex-col items-center justify-center">
-            <div aria-hidden className="h-5 md:h-6 w-28 md:w-32 rounded-sm bg-[repeating-linear-gradient(90deg,#9ca3af_0_1px,transparent_1px_3px,#9ca3af_3px_4px,transparent_4px_7px)] opacity-60" />
-            <span className="font-mono text-[6px] md:text-[7px] text-gray-400 tracking-widest mt-1">DTU/24/CS/1002/2028</span>
+            <div aria-hidden className="h-5 md:h-6 w-28 md:w-32 rounded-sm bg-[repeating-linear-gradient(90deg,#8b7d6b_0_1px,transparent_1px_3px,#8b7d6b_3px_4px,transparent_4px_7px)] opacity-70" />
+            <span className="font-mono text-[6px] md:text-[7px] text-stone-500 tracking-widest mt-1">DTU/24/CS/1002/2028</span>
           </div>
         </div>
 
-        {/* BACK: Digital Buddy Pass */}
+        {/* BACK: Digital Buddy Pass — unchanged */}
         <div
           ref={passRef}
           style={{ clipPath: "circle(0px at 0 0)" }}

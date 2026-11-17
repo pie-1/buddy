@@ -1,9 +1,7 @@
-// server/utils/weekUtils.js
-
 export function currentWeekStart() {
   const now = new Date();
-  const day = now.getDay(); // 0 = Sun, 1 = Mon, ...
-  const diff = day === 0 ? 6 : day - 1; // days since Monday
+  const day = now.getDay(); 
+  const diff = day === 0 ? 6 : day - 1; 
   const monday = new Date(now);
   monday.setHours(0, 0, 0, 0);
   monday.setDate(monday.getDate() - diff);

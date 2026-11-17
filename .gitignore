@@ -1,0 +1,23 @@
+# .gitignore (root)
+node_modules/
+dist/
+build/
+
+# envs
+.env
+.env.local
+.env.*.local
+server/.env
+client/.env
+
+# logs
+*.log
+npm-debug.log*
+
+# docker
+*.pid
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/

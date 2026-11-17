@@ -9,24 +9,31 @@ const MARQUEE_2 = "REAL PEOPLE • JUST YOUR CAMPUS • TRUSTED • ";
 const FIXES = [
   { 
     id: "01", 
-    title: "One-Semester Rentals", 
-    desc: "Rent a drafter for exactly one semester. Escrow holds your money until you meet on campus and confirm the handover.", 
+    title: "Rent Items", 
+    desc: "Need some items for just some days? Rent it from a verified college seniors or juniors.", 
     icon: "📐", 
     color: "text-red-400" 
   },
   { 
     id: "02", 
     title: "Past Papers & Notes", 
-    desc: "Stop digging through WhatsApp. Find past papers, lab manuals, and study guides shared directly by verified seniors.", 
+    desc: "Stop digging through group chats. Find past papers, lab manuals, and study guides shared by verified seniors.", 
     icon: "📚", 
     color: "text-cyan-400" 
   },
   { 
     id: "03", 
     title: "Seniors & Alumni", 
-    desc: "Need career advice or a teammate for the upcoming hackathon? Connect directly with alumni and students from other departments.", 
+    desc: "Need career advice or a teammate for the upcoming hackathon? Connect directly with alumni and students across departments.", 
     icon: "🤝", 
     color: "text-orange-400" 
+  },
+  { 
+    id: "04", 
+    title: "Find Flatmates", 
+    desc: "Match on budget, area, and habits. See rooms on a map. No more sketchy Facebook groups.", 
+    icon: "🏠", 
+    color: "text-green-400" 
   },
 ];
 
@@ -155,9 +162,9 @@ export function TrustFlow() {
         </motion.div>
 
         <motion.div style={{ opacity: fixesOpacity }} className="absolute z-20 flex flex-col gap-3 md:gap-4 w-[min(440px,88vw)] left-1/2 -translate-x-1/2 md:translate-x-0 md:left-1/2 md:ml-[6vw] top-1/2 -translate-y-1/2 max-md:top-[56%]">
-          <p className="text-indigo-400 text-[10px] tracking-[0.35em] uppercase font-bold">One pass. Three fixes.</p>
+          <p className="text-indigo-400 text-[10px] tracking-[0.35em] uppercase font-bold">One pass. Four fixes.</p>
           {FIXES.map((f, i) => (
-            <FixCard key={f.id} p={p} fix={f} start={0.78 + i * 0.06} />
+            <FixCard key={f.id} p={p} fix={f} start={0.78 + i * 0.05} />
           ))}
         </motion.div>
       </div>

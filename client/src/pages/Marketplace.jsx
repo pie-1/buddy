@@ -8,6 +8,7 @@ import { fetchListings } from "../services/listingService";
 import ListingCard from "../components/features/Marketplace/ListingCard";
 import ListingSkeleton from "../components/features/Marketplace/ListingSkeleton";
 import FilterBar from "../components/features/Marketplace/FilterBar";
+import { CATEGORIES } from "../constants/marketplace";
 
 const container = { hidden: {}, show: { transition: { staggerChildren: 0.06 } } };
 
@@ -45,7 +46,7 @@ export default function Marketplace() {
   }, [category, sort, search]);
 
   const stats = useMemo(() => {
-    const counts = { sell: 0, rent: 0, borrow: 0 };
+    const counts = { sell: 0, rent: 0 };
     listings.forEach((l) => {
       if (counts[l.category] !== undefined) counts[l.category]++;
     });
@@ -57,7 +58,6 @@ export default function Marketplace() {
       <Navbar />
 
       <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[900px] h-[500px] pointer-events-none" style={{ background: "radial-gradient(ellipse, rgba(79,70,229,.22), transparent 65%)" }} />
-      <div className="absolute top-1/3 -right-40 w-[500px] h-[500px] pointer-events-none" style={{ background: "radial-gradient(circle, rgba(249,115,22,.08), transparent 65%)" }} />
 
       <div className="relative max-w-6xl mx-auto pt-32 pb-24 px-6">
         <motion.div
@@ -73,7 +73,7 @@ export default function Marketplace() {
               <span className="italic text-indigo-400"> verified.</span>
             </h1>
             <p className="text-gray-400 text-lg">
-              Buy, sell, rent, or borrow — only from students at your university.
+              Buy, sell, or rent — only from students at your university.
             </p>
           </div>
 
@@ -89,16 +89,12 @@ export default function Marketplace() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15, duration: 0.6 }}
-          className="grid grid-cols-3 gap-3 mb-8"
+          className="grid grid-cols-2 gap-3 mb-8"
         >
-          {[
-            { label: "For sale", value: stats.sell, color: "text-indigo-300" },
-            { label: "For rent", value: stats.rent, color: "text-orange-300" },
-            { label: "To borrow", value: stats.borrow, color: "text-emerald-300" },
-          ].map((s) => (
-            <div key={s.label} className="bg-white/[0.03] border border-white/10 rounded-xl px-5 py-4">
-              <div className={`text-2xl font-black ${s.color}`}>{s.value}</div>
-              <div className="text-[10px] uppercase tracking-widest text-gray-500 mt-1">{s.label}</div>
+          {Object.entries(CATEGORIES).map(([key, meta]) => (
+            <div key={key} className="bg-white/[0.03] border border-white/10 rounded-xl px-5 py-4">
+              <div className={`text-2xl font-black ${meta.statColor}`}>{stats[key] ?? 0}</div>
+              <div className="text-[10px] uppercase tracking-widest text-gray-500 mt-1">{meta.label}</div>
             </div>
           ))}
         </motion.div>

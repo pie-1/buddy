@@ -1,4 +1,3 @@
-// client/src/services/uploadService.js
 import api from "./api";
 import { squish } from "squish-image";
 
@@ -46,7 +45,7 @@ export const uploadFiles = async (files) => {
   }
 
   const { data } = await api.post("/upload/images", formData);
-  return data.files; // [{url, thumb, isPdf}]
+  return data.files; 
 };
 
 export const uploadAvatar = async (file) => {

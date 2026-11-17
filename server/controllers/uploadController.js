@@ -1,4 +1,3 @@
-// server/controllers/uploadController.js
 import { uploadToCloudinary } from "../config/cloudinary.js";
 
 export const uploadImages = async (req, res) => {
@@ -9,7 +8,6 @@ export const uploadImages = async (req, res) => {
 
     const results = await Promise.all(req.files.map(uploadToCloudinary));
 
-    // Return richer shape: { url, thumb, isPdf }[]
     res.status(200).json({
       urls: results.map((r) => r.url),
       files: results,

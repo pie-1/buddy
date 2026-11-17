@@ -1,8 +1,7 @@
-// client/src/pages/Spotlight.jsx
 import { useEffect, useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { FiStar, FiLoader, FiAlertCircle, FiArrowRight, FiClock } from "react-icons/fi";
+import { FiStar, FiLoader, FiAlertCircle, FiArrowRight, FiClock, FiCalendar } from "react-icons/fi";
 import { Navbar } from "../components/layout/Navbar";
 import { AuthContext } from "../context/AuthContext";
 import { fetchCurrentSpotlight, fetchMyClaims } from "../services/spotlightService";
@@ -48,6 +47,10 @@ export default function Spotlight() {
     );
   }
 
+  const users = spotlight?.users || [];
+  const events = spotlight?.events || [];
+  const isEmpty = users.length === 0 && events.length === 0;
+
   return (
     <div className="min-h-screen bg-[#fafaf8]">
       <Navbar />
@@ -59,11 +62,11 @@ export default function Spotlight() {
             <FiStar size={12} /> This week's spotlight
           </p>
           <h1 className="text-4xl md:text-6xl font-serif font-bold text-stone-900 leading-[1.05] mb-3">
-            Three students,
+            The best of campus,
             <span className="italic text-purple-700"> on top.</span>
           </h1>
           <p className="text-stone-500 max-w-xl mx-auto">
-            {spotlight?.label} · Their profiles, listings and posts rank first across the platform.
+            {spotlight?.label} · Their profiles, listings and events rank first across the platform.
           </p>
         </motion.div>
 
@@ -73,56 +76,78 @@ export default function Spotlight() {
           </div>
         )}
 
-        {/* Spotlight lineup */}
-        {spotlight?.users?.length === 0 ? (
+        {isEmpty ? (
           <div className="text-center py-16 bg-white border border-stone-200 rounded-3xl mb-8">
             <FiStar size={48} className="text-stone-300 mx-auto mb-3" />
-            <p className="text-stone-500 mb-2">No one is spotlighted this week — yet.</p>
+            <p className="text-stone-500 mb-2">Nothing is spotlighted this week — yet.</p>
             <p className="text-xs text-stone-400">Be the first to claim a slot below.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-12">
-            {spotlight.users.map((u, i) => (
-              <motion.div
-                key={u._id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1, duration: 0.6, ease: EASE }}
-              >
-                <Link
-                  to={`/profile/${u._id}`}
-                  className="group block bg-gradient-to-br from-purple-50 via-white to-indigo-50 border-2 border-purple-200 hover:border-purple-400 rounded-3xl p-6 transition-all shadow-[0_8px_32px_-12px_rgba(139,92,246,0.25)]"
-                >
-                  <div className="flex justify-between items-center mb-4">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-purple-700 bg-purple-100 border border-purple-200 px-2 py-1 rounded-full">
-                      Rank #{i + 1}
-                    </span>
-                    <FiStar size={16} className="text-purple-500" fill="currentColor" />
-                  </div>
-                  {u.avatar ? (
-                    <img src={u.avatar} alt={u.name} className="w-20 h-20 rounded-2xl object-cover mb-4 border border-purple-100" />
-                  ) : (
-                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-500 grid place-items-center text-white text-2xl font-bold mb-4">
-                      {u.name?.[0]?.toUpperCase()}
-                    </div>
-                  )}
-                  <h3 className="font-serif font-bold text-xl text-stone-900 mb-1 group-hover:text-purple-800 transition-colors">{u.name}</h3>
-                  <p className="text-xs text-stone-500 mb-3">{u.college || u.university}</p>
-                  {u.bio && <p className="text-sm text-stone-600 line-clamp-2">{u.bio}</p>}
-                </Link>
-              </motion.div>
-            ))}
+          <div className="space-y-12 mb-12">
+            {users.length > 0 && (
+              <div>
+                <h2 className="text-sm font-bold uppercase tracking-widest text-purple-700 mb-4 flex items-center gap-2">
+                  <FiStar size={12} fill="currentColor" /> Spotlighted Students
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                  {users.map((u, i) => (
+                    <motion.div key={u._id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1, duration: 0.6, ease: EASE }}>
+                      <Link to={`/profile/${u._id}`} className="group block bg-gradient-to-br from-purple-50 via-white to-indigo-50 border-2 border-purple-200 hover:border-purple-400 rounded-3xl p-6 transition-all shadow-[0_8px_32px_-12px_rgba(139,92,246,0.25)]">
+                        <div className="flex justify-between items-center mb-4">
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-purple-700 bg-purple-100 border border-purple-200 px-2 py-1 rounded-full">Rank #{i + 1}</span>
+                          <FiStar size={16} className="text-purple-500" fill="currentColor" />
+                        </div>
+                        {u.avatar ? (
+                          <img src={u.avatar} alt={u.name} className="w-20 h-20 rounded-2xl object-cover mb-4 border border-purple-100" />
+                        ) : (
+                          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-500 grid place-items-center text-white text-2xl font-bold mb-4">
+                            {u.name?.[0]?.toUpperCase()}
+                          </div>
+                        )}
+                        <h3 className="font-serif font-bold text-xl text-stone-900 mb-1 group-hover:text-purple-800 transition-colors">{u.name}</h3>
+                        <p className="text-xs text-stone-500 mb-3">{u.college || u.university}</p>
+                        {u.bio && <p className="text-sm text-stone-600 line-clamp-2">{u.bio}</p>}
+                      </Link>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {events.length > 0 && (
+              <div>
+                <h2 className="text-sm font-bold uppercase tracking-widest text-orange-700 mb-4 flex items-center gap-2">
+                  <FiCalendar size={12} /> Spotlighted Events
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                  {events.map((e, i) => (
+                    <motion.div key={e._id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1, duration: 0.6, ease: EASE }}>
+                      <Link to={`/events/${e._id}`} className="group block bg-gradient-to-br from-orange-50 via-white to-red-50 border-2 border-orange-200 hover:border-orange-400 rounded-3xl p-6 transition-all shadow-[0_8px_32px_-12px_rgba(249,115,22,0.25)]">
+                        <div className="flex justify-between items-center mb-4">
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-orange-700 bg-orange-100 border border-orange-200 px-2 py-1 rounded-full">Rank #{i + 1}</span>
+                          <FiStar size={16} className="text-orange-500" fill="currentColor" />
+                        </div>
+                        {e.coverImage ? (
+                          <img src={e.coverImage} alt={e.title} className="w-full h-32 object-cover rounded-2xl mb-4" />
+                        ) : (
+                          <div className="w-full h-32 rounded-2xl bg-orange-100 grid place-items-center mb-4">
+                            <FiCalendar size={32} className="text-orange-400" />
+                          </div>
+                        )}
+                        <h3 className="font-serif font-bold text-xl text-stone-900 mb-1 group-hover:text-orange-800 transition-colors line-clamp-2">{e.title}</h3>
+                        <p className="text-xs text-stone-500 mb-3">{new Date(e.date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })} · {e.venue}</p>
+                        {e.description && <p className="text-sm text-stone-600 line-clamp-2">{e.description}</p>}
+                      </Link>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
-        {/* Purchase card */}
         {user && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.6 }}
-            className="bg-white border border-stone-200 rounded-3xl p-8"
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.6 }} className="bg-white border border-stone-200 rounded-3xl p-8">
             <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
               <div className="flex-1">
                 <div className="text-[10px] uppercase tracking-widest text-purple-600 font-bold mb-2 flex items-center gap-2">

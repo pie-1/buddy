@@ -1,6 +1,4 @@
-// client/src/components/ui/AuthShowcase.jsx
-// Rotating image panel for the login screen. Drop real photos in /public/images/auth/ (same names as
-// `src` below). Until a photo exists, each slide falls back to an on-brand gradient poster, so it never looks broken.
+
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
@@ -10,11 +8,10 @@ const EASE = [0.22, 1, 0.36, 1];
 const SLIDES = [
   { src: "/images/auth/verify.jpeg", icon: "🎓", from: "#2a2670", to: "#0c0b18", caption: "Only real students. Verified.", sub: "Your university email is your key." },
   { src: "/images/auth/verify3.png", icon: "🛡️", from: "#c2570c", to: "#2b1005", caption: "No more “bro trust me”.", sub: "Escrow holds the money until you both tap done." },
-  { src: "/images/auth/verify1.png", icon: "🏠", from: "#0e7490", to: "#051b26", caption: "A roommate who actually fits.", sub: "Match on habits, not just rent." },
-  { src: "/images/auth/verify2.png", icon: "📡", from: "#b4235f", to: "#2d0a1a", caption: "Know what's happening on campus.", sub: "Hack nights, fests and open mics on one radar." },
+  { src: "/images/auth/verify4.jpeg", icon: "🏠", from: "#0e7490", to: "#051b26", caption: "A roommate who actually fits.", sub: "Match on habits, not just rent." },
+  { src: "/images/auth/verify5.jpeg", icon: "📡", from: "#b4235f", to: "#2d0a1a", caption: "Know what's happening on campus.", sub: "Hack nights, fests and open mics on one radar." },
 ];
 
-// fallback art: contour rings + a glass tile with the slide's icon
 function PosterArt({ slide }) {
   return (
     <div className="absolute inset-0" style={{ background: `radial-gradient(ellipse at 30% 20%, ${slide.from}, ${slide.to} 75%)` }}>
@@ -33,9 +30,8 @@ function PosterArt({ slide }) {
 export default function AuthShowcase() {
   const reduce = useReducedMotion();
   const [index, setIndex] = useState(0);
-  const [failed, setFailed] = useState({}); // src -> true once an image 404s
+  const [failed, setFailed] = useState({}); 
 
-  // warm the cache and learn early which photos are missing
   useEffect(() => {
     SLIDES.forEach((s) => {
       const img = new Image();

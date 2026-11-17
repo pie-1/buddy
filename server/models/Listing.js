@@ -1,4 +1,3 @@
-// server/models/Listing.js
 import mongoose from "mongoose";
 
 const listingSchema = new mongoose.Schema(
@@ -7,7 +6,7 @@ const listingSchema = new mongoose.Schema(
     description: { type: String, required: true },
     category: {
       type: String,
-      enum: ["buy", "sell", "rent", "borrow"],
+      enum: ["sell", "rent"],
       required: true,
     },
     price: { type: Number, required: true, min: 0 },
@@ -30,7 +29,7 @@ const listingSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["active", "requested", "sold", "completed", "hidden"],
+      enum: ["active", "sold", "rented", "completed", "hidden"],
       default: "active",
     },
   },

@@ -1,4 +1,3 @@
-// server/middlewares/validateUploads.js
 const MAX_PDFS = 2;
 
 export const validateUploads = (req, res, next) => {

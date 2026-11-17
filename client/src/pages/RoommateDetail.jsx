@@ -6,7 +6,6 @@ import {
   ArrowLeft, MessageCircle, Loader2, MapPin, Users, Home, Search, Calendar,
   Sparkles, AlertCircle, ShieldCheck, Moon, Sun, Pencil, Trash2, ExternalLink,
 } from "lucide-react";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import { Navbar } from "../components/layout/Navbar";
 import { AuthContext } from "../context/AuthContext";
 import { fetchRoommateById, deleteRoommate } from "../services/roommateService";
@@ -121,14 +120,6 @@ export default function RoommateDetail() {
   const viewerKind = "looking-for-room";
   const cta = ctaFor(viewerKind, listing.kind);
 
-  const hasCoords = Number.isFinite(listing.location?.lat) && Number.isFinite(listing.location?.lng);
-  const mapLink =
-    listing.location?.raw && listing.location.raw.startsWith("http")
-      ? listing.location.raw
-      : hasCoords
-      ? `https://www.google.com/maps?q=${listing.location.lat},${listing.location.lng}`
-      : null;
-
   const priceBlock = listing.kind === "have-room" ? (
     <>
       <div className="text-[10px] uppercase tracking-[0.3em] text-gray-500 font-bold mb-2">Rent</div>
@@ -202,7 +193,7 @@ export default function RoommateDetail() {
               <div className="bg-[#14121f] border border-white/10 rounded-xl p-4">
                 {listing.sleepSchedule === "night-owl" ? <Moon size={16} className="text-violet-400 mb-2" /> : <Sun size={16} className="text-amber-400 mb-2" />}
                 <div className="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-1">Sleep</div>
-                <div className="text-white font-bold text-sm capitalize">{listing.sleepSchedule.replace("-", " ")}</div>
+                <div className="text-white font-bold text-sm capitalize">{listing.sleepSchedule?.replace("-", " ") || "—"}</div>
               </div>
             </div>
 
@@ -219,33 +210,26 @@ export default function RoommateDetail() {
               </div>
             )}
 
-            {/* Map */}
-            {hasCoords && (
+            {listing.location?.raw && (
               <div>
-                <h2 className="text-sm font-bold uppercase tracking-widest text-gray-500 mb-3 flex items-center justify-between">
-                  <span>Location</span>
-                  {mapLink && (
-                    <a href={mapLink} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-indigo-400 hover:text-indigo-300 normal-case tracking-normal font-medium">
-                      Open in Google Maps <ExternalLink size={11} />
-                    </a>
-                  )}
-                </h2>
-                <div className="rounded-2xl overflow-hidden border border-white/10 h-64 z-0">
-                  <MapContainer
-                    center={{ lat: listing.location.lat, lng: listing.location.lng }}
-                    zoom={15}
-                    scrollWheelZoom
-                    style={{ height: "100%", width: "100%" }}
-                  >
-                    <TileLayer
-                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                      attribution="© OpenStreetMap contributors"
-                    />
-                    <Marker position={{ lat: listing.location.lat, lng: listing.location.lng }}>
-                      <Popup>{listing.title}</Popup>
-                    </Marker>
-                  </MapContainer>
-                </div>
+                <h2 className="text-sm font-bold uppercase tracking-widest text-gray-500 mb-3">Location</h2>
+                <a
+                  href={listing.location.raw}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="group flex items-center justify-between gap-3 bg-[#14121f] border border-white/10 hover:border-indigo-500/40 rounded-2xl p-5 transition-colors"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-11 h-11 rounded-xl bg-indigo-500/10 border border-indigo-500/30 grid place-items-center shrink-0">
+                      <MapPin size={20} className="text-indigo-400" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-sm font-bold text-white">View on Google Maps</div>
+                      <div className="text-xs text-gray-500">Opens the exact spot in a new tab</div>
+                    </div>
+                  </div>
+                  <ExternalLink size={16} className="text-gray-500 group-hover:text-indigo-400 transition-colors shrink-0" />
+                </a>
               </div>
             )}
           </motion.div>

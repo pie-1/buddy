@@ -1,5 +1,13 @@
-// server/controllers/roommateController.js
 import Roommate from "../models/Roommate.js";
+
+const MAP_URL = /^https?:\/\/(www\.)?(google\.(com|co\.[a-z]{2})\/maps|maps\.app\.goo\.gl|goo\.gl\/maps)/i;
+
+function normalizeLocation(input) {
+  if (!input?.raw || typeof input.raw !== "string") return { raw: "" };
+  const raw = input.raw.trim();
+  if (!MAP_URL.test(raw)) return null;
+  return { raw };
+}
 
 export const createRoommate = async (req, res) => {
   try {
@@ -20,6 +28,11 @@ export const createRoommate = async (req, res) => {
       return res.status(400).json({ message: "rent is required for have-room listings" });
     }
 
+    const loc = normalizeLocation(location);
+    if (loc === null) {
+      return res.status(400).json({ message: "Location must be a Google Maps link" });
+    }
+
     const roommate = await Roommate.create({
       kind,
       title,
@@ -27,7 +40,7 @@ export const createRoommate = async (req, res) => {
       bio: bio || "",
       rent: rent ?? 0,
       area,
-      location: location || {},
+      location: loc,
       roomType: roomType || "single",
       genderPreference: genderPreference || "any",
       furnishing: furnishing || "unfurnished",
@@ -76,7 +89,6 @@ export const getAllRoommates = async (req, res) => {
       .sort({ createdAt: -1 })
       .limit(100);
 
-    // Spotlight posters' listings float to top
     roommates.sort((a, b) => {
       const aSpot = a.postedBy?.spotlightUntil && a.postedBy.spotlightUntil > now ? 1 : 0;
       const bSpot = b.postedBy?.spotlightUntil && b.postedBy.spotlightUntil > now ? 1 : 0;
@@ -113,7 +125,7 @@ export const updateRoommate = async (req, res) => {
     }
 
     const editable = [
-      "title", "description", "bio", "rent", "area", "location", "roomType",
+      "title", "description", "bio", "rent", "area", "roomType",
       "genderPreference", "furnishing", "amenities", "budgetMin", "budgetMax",
       "preferredAreas", "sleepSchedule", "cleanliness", "moveInDate", "leaseDuration",
       "photos", "status",
@@ -121,6 +133,14 @@ export const updateRoommate = async (req, res) => {
     editable.forEach((field) => {
       if (req.body[field] !== undefined) roommate[field] = req.body[field];
     });
+
+    if (req.body.location !== undefined) {
+      const loc = normalizeLocation(req.body.location);
+      if (loc === null) {
+        return res.status(400).json({ message: "Location must be a Google Maps link" });
+      }
+      roommate.location = loc;
+    }
 
     const updated = await roommate.save();
     res.json(updated);

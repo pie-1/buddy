@@ -1,4 +1,3 @@
-// server/routes/eventRoutes.js
 import express from "express";
 import {
   createEvent, getAllEvents, getEventById, updateEvent, deleteEvent, rsvpEvent,

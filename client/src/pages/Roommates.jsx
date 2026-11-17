@@ -1,4 +1,3 @@
-// client/src/pages/Roommates.jsx
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -72,11 +71,10 @@ export default function Roommates() {
             to="/roommates/new"
             className="shrink-0 inline-flex items-center gap-2 bg-orange-600 hover:bg-orange-500 text-white text-sm font-bold px-6 py-3.5 rounded-xl transition-all shadow-[0_0_24px_rgba(249,115,22,0.35)] hover:-translate-y-0.5"
           >
-            <Plus size={16} /> Post your profile
+            <Plus size={16} /> Post your Room
           </Link>
         </motion.div>
 
-        {/* Mode selector */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
           {MODES.map((m) => {
             const active = mode === m.value;

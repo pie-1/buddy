@@ -21,7 +21,6 @@ function EmptyTab({ icon: Icon, message, ctaLabel, ctaTo }) {
   );
 }
 
-
 export default function ProfileStudentContent({ user, listings, roommate, events, teamRequests, helpPosts = [], isOwn }) {
   const [tab, setTab] = useState("overview");
 

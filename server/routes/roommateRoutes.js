@@ -1,4 +1,3 @@
-// server/routes/roommateRoutes.js
 import express from "express";
 import {
   createRoommate,

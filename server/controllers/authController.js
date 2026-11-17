@@ -1,8 +1,9 @@
-// server/controllers/authController.js
 import User from "../models/User.js";
 import CollegeRequest from "../models/CollegeRequest.js";
 import generateToken from "../utils/generateToken.js";
 import { sendOTPEmail } from "../utils/sendEmail.js";
+import { TRUST_POINTS } from "../utils/trustScore.js";
+
 
 const registerUser = async (req, res) => {
   const { name, email, password, graduationYear, role, adminCode } = req.body;
@@ -21,7 +22,6 @@ const registerUser = async (req, res) => {
     let university = "Admin";
     let finalGradYear;
 
-    // Students go through strict validation
     if (!isValidAdminCode) {
       const domain = email.split("@")[1].toLowerCase();
 
@@ -36,8 +36,8 @@ const registerUser = async (req, res) => {
         if (approvedRequest) {
           university = "TU";
         } else {
-          return res.status(400).json({ 
-            message: "Please use a valid university email domain, or request your college domain in the footer." 
+          return res.status(400).json({
+            message: "Please use a valid university email domain, or request your college domain in the footer.",
           });
         }
       }
@@ -59,7 +59,6 @@ const registerUser = async (req, res) => {
       email,
       password,
       university,
-      // Only include graduationYear for students. For admins, it's undefined.
       ...(finalGradYear !== undefined && { graduationYear: finalGradYear }),
       role: assignedRole,
       otp,
@@ -98,6 +97,8 @@ const loginUser = async (req, res) => {
         university: user.university,
         role: user.role,
         isAlumni: user.isAlumni,
+        avatar: user.avatar,
+        trustScore: user.trustScore,
         token: generateToken(user._id),
       });
     } else {
@@ -124,6 +125,7 @@ const verifyOTP = async (req, res) => {
     user.isVerified = true;
     user.otp = undefined;
     user.otpExpires = undefined;
+    user.trustScore = (user.trustScore || 0) + TRUST_POINTS.EMAIL_VERIFIED;   // ← trust award
     await user.save();
 
     res.status(200).json({
@@ -133,6 +135,8 @@ const verifyOTP = async (req, res) => {
       university: user.university,
       role: user.role,
       isAlumni: user.isAlumni,
+      avatar: user.avatar,
+      trustScore: user.trustScore,
       token: generateToken(user._id),
     });
   } catch (error) {

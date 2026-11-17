@@ -1,4 +1,3 @@
-// client/src/pages/CreateTeamRequest.jsx
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -129,7 +128,6 @@ export default function CreateTeamRequest() {
           transition={{ duration: 0.6, delay: 0.1, ease: EASE }}
           className="bg-white border border-stone-200 rounded-2xl p-6 md:p-8 space-y-6"
         >
-          {/* Section: Basics */}
           <div className="space-y-5">
             <h2 className="text-sm font-bold uppercase tracking-widest text-stone-400 border-b border-stone-100 pb-2">
               Basics
@@ -174,7 +172,6 @@ export default function CreateTeamRequest() {
             </div>
           </div>
 
-          {/* Section: Roles */}
           <div className="space-y-4">
             <h2 className="text-sm font-bold uppercase tracking-widest text-stone-400 border-b border-stone-100 pb-2">
               Roles needed
@@ -258,7 +255,6 @@ export default function CreateTeamRequest() {
             )}
           </div>
 
-          {/* Section: Details */}
           <div className="space-y-5">
             <h2 className="text-sm font-bold uppercase tracking-widest text-stone-400 border-b border-stone-100 pb-2">
               Team details

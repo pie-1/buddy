@@ -1,4 +1,3 @@
-// client/src/services/spotlightService.js
 import api from "./api";
 
 export const fetchCurrentSpotlight = async () => {
@@ -6,8 +5,13 @@ export const fetchCurrentSpotlight = async () => {
   return data;
 };
 
-export const submitSpotlightClaim = async ({ txnId, screenshot }) => {
-  const { data } = await api.post("/spotlight/claim", { txnId, screenshot });
+export const submitSpotlightClaim = async ({ txnId, screenshot, targetType, targetId }) => {
+  const { data } = await api.post("/spotlight/claim", { 
+    txnId, 
+    screenshot, 
+    targetType, 
+    targetId 
+  });
   return data;
 };
 

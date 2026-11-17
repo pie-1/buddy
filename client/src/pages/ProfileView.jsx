@@ -1,6 +1,5 @@
-// client/src/pages/ProfileView.jsx
 import { useEffect, useState, useContext } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { FiLoader, FiAlertCircle } from "react-icons/fi";
 import { Navbar } from "../components/layout/Navbar";
@@ -75,15 +74,15 @@ export default function ProfileView() {
           <FiAlertCircle size={40} className="text-red-500 mx-auto mb-4" />
           <h1 className="text-2xl font-serif font-bold mb-2 text-stone-900">Profile not found</h1>
           <p className="text-stone-500 mb-8">{error || "This profile may not exist."}</p>
-          <Link to="/" className="inline-flex items-center gap-2 bg-stone-900 hover:bg-stone-800 text-white text-sm font-semibold px-6 py-3 rounded-xl">
+          <a href="/" className="inline-flex items-center gap-2 bg-stone-900 hover:bg-stone-800 text-white text-sm font-semibold px-6 py-3 rounded-xl">
             Back to home
-          </Link>
+          </a>
         </div>
       </div>
     );
   }
 
-  const { user, listings, roommate, events, teamRequests, mutual, spotlight, commonGround } = data;
+  const { user, listings, roommate, events, teamRequests, helpPosts, mutual, spotlight, commonGround, adminStats } = data;
   const isOwn = me._id === user._id;
   const isAdminOrMod = user.role === "admin" || user.role === "moderator";
 
@@ -91,27 +90,41 @@ export default function ProfileView() {
     <div className="min-h-screen bg-[#fafaf8]">
       <Navbar />
       <div className="max-w-6xl mx-auto pt-32 pb-24 px-4 sm:px-6">
-        <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr_280px] gap-6">
-          
-          {/* Passed commonGround prop here */}
-          <ProfileIdentityCard
-            user={user}
-            spotlight={spotlight}
-            isOwn={isOwn}
-            isAdminOrMod={isAdminOrMod}
-            mutual={mutual}
-            commonGround={commonGround} 
-            messaging={messaging}
-            onMessage={handleMessage}
-          />
+        <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-8">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: EASE }}
+            className="lg:sticky lg:top-32 self-start"
+          >
+            <ProfileIdentityCard
+              user={user}
+              spotlight={spotlight}
+              isOwn={isOwn}
+              isAdminOrMod={isAdminOrMod}
+              mutual={mutual}
+              commonGround={commonGround}
+              messaging={messaging}
+              onMessage={handleMessage}
+            />
+            <div className="mt-6">
+              <ProfileSidebar
+                user={user}
+                spotlight={spotlight}
+                isOwn={isOwn}
+                isAdminOrMod={isAdminOrMod}
+              />
+            </div>
+          </motion.div>
 
           <motion.main
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1, ease: EASE }}
+            className="min-w-0"
           >
             {isAdminOrMod ? (
-              <ProfileAdminContent user={user} />
+              <ProfileAdminContent user={user} adminStats={adminStats} isOwn={isOwn} />
             ) : (
               <ProfileStudentContent
                 user={user}
@@ -119,29 +132,11 @@ export default function ProfileView() {
                 roommate={roommate}
                 events={events}
                 teamRequests={teamRequests}
+                helpPosts={helpPosts}
                 isOwn={isOwn}
               />
             )}
           </motion.main>
-
-          <motion.aside
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2, ease: EASE }}
-            className="hidden lg:block lg:sticky lg:top-32 self-start"
-          >
-            <ProfileSidebar
-              user={user}
-              spotlight={spotlight}
-              isOwn={isOwn}
-              isAdminOrMod={isAdminOrMod}
-              listings={listings}
-              events={events}
-              teamRequests={teamRequests}
-              roommate={roommate}
-              helpPosts={data.helpPosts || []}
-            />
-          </motion.aside>
         </div>
       </div>
     </div>

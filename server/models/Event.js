@@ -1,4 +1,3 @@
-// server/models/Event.js
 import mongoose from "mongoose";
 
 const eventSchema = new mongoose.Schema(
@@ -12,11 +11,7 @@ const eventSchema = new mongoose.Schema(
     registrationDeadline: { type: Date, default: null },
 
     venue: { type: String, required: true, trim: true },
-    mode: {
-      type: String,
-      enum: ["offline", "online", "hybrid"],
-      default: "offline",
-    },
+    mode: { type: String, enum: ["offline", "online", "hybrid"], default: "offline" },
     location: {
       address: { type: String, trim: true },
       lat: { type: Number, default: null },
@@ -32,11 +27,10 @@ const eventSchema = new mongoose.Schema(
     college: { type: String, trim: true, default: "All" },
     capacity: { type: Number, default: null, min: 0 },
 
-    organizerId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
+    organizerId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    
+    spotlightUntil: { type: Date, default: null },
+
     rsvps: [
       {
         userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
@@ -45,18 +39,14 @@ const eventSchema = new mongoose.Schema(
       },
     ],
 
-    status: {
-      type: String,
-      enum: ["upcoming", "ongoing", "completed", "cancelled"],
-      default: "upcoming",
-    },
+    status: { type: String, enum: ["upcoming", "ongoing", "completed", "cancelled"], default: "upcoming" },
   },
   { timestamps: true }
 );
 
 eventSchema.index({ title: "text", description: "text", venue: "text", tags: "text" });
 eventSchema.index({ date: 1, status: 1 });
-eventSchema.index({ mode: 1, tags: 1 });
+eventSchema.index({ spotlightUntil: 1 });
 
 const Event = mongoose.model("Event", eventSchema);
 export default Event;

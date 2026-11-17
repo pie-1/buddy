@@ -1,4 +1,3 @@
-// server/config/cloudinary.js
 import { v2 as cloudinary } from "cloudinary";
 import multer from "multer";
 import { Readable } from "stream";
@@ -47,12 +46,11 @@ export function uploadToCloudinary(file) {
     const stream = cloudinary.uploader.upload_stream(
       {
         folder: "collegebuddy/listings",
-        resource_type: "image", // PDFs as images so Cloudinary generates a thumbnail
+        resource_type: "image", 
         public_id: isPdf ? `${id}.pdf` : id,
       },
       (err, result) => {
         if (err) return reject(err);
-        // For PDFs, build the page-1 thumbnail URL so the frontend can show a preview
         if (isPdf) {
           const thumb = cloudinary.url(result.public_id, {
             resource_type: "image",

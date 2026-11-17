@@ -1,4 +1,3 @@
-// server/routes/chatRoutes.js
 import express from "express";
 import {
   startConversation,

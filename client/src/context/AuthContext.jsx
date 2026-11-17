@@ -9,25 +9,25 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Instantly resolve the auth state on boot
     try {
       const storedUser = localStorage.getItem("user");
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
-      }
+      if (storedUser) setUser(JSON.parse(storedUser));
     } catch {
-      // corrupted storage, clear it
       localStorage.removeItem("user");
     }
     setLoading(false);
   }, []);
 
+  const persist = (data) => {
+    localStorage.setItem("user", JSON.stringify(data));
+    localStorage.setItem("token", data.token);
+    setUser(data);
+  };
+
   const login = async (email, password) => {
     try {
       const { data } = await api.post("/auth/login", { email, password });
-      localStorage.setItem("user", JSON.stringify(data));
-      localStorage.setItem("token", data.token);
-      setUser(data);
+      persist(data);
       return { success: true };
     } catch (error) {
       return { success: false, message: error.response?.data?.message || "Login failed" };
@@ -37,9 +37,7 @@ export const AuthProvider = ({ children }) => {
   const verifyOTP = async (email, otp) => {
     try {
       const { data } = await api.post("/auth/verify", { email, otp });
-      localStorage.setItem("user", JSON.stringify(data));
-      localStorage.setItem("token", data.token);
-      setUser(data);
+      persist(data);
       return { success: true };
     } catch (error) {
       return { success: false, message: error.response?.data?.message || "Verification failed" };
@@ -61,8 +59,17 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const updateUser = (partial) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const next = { ...prev, ...partial };
+      localStorage.setItem("user", JSON.stringify(next));
+      return next;
+    });
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, verifyOTP, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, verifyOTP, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

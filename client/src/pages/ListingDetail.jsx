@@ -1,10 +1,9 @@
-// client/src/pages/ListingDetail.jsx
 import { useEffect, useState, useContext } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ArrowLeft, MessageCircle, Loader2, ShieldCheck, Clock, Tag,
-  FileText, ExternalLink, Pencil, AlertCircle, Trash2,
+  FileText, ExternalLink, Pencil, AlertCircle, Trash2, CalendarClock,
 } from "lucide-react";
 import { Navbar } from "../components/layout/Navbar";
 import { AuthContext } from "../context/AuthContext";
@@ -12,17 +11,10 @@ import { fetchListingById, deleteListing } from "../services/listingService";
 import { startConversation } from "../services/chatService";
 import DetailGallery from "../components/features/Marketplace/DetailGallery";
 import SellerCard from "../components/features/Marketplace/SellerCard";
+import StatusControl from "../components/features/Marketplace/StatusControl";
+import { CATEGORIES, STATUS, isPdf, formatPrice } from "../constants/marketplace";
 
 const EASE = [0.22, 1, 0.36, 1];
-
-const CATEGORY_META = {
-  sell: { label: "For sale", cls: "text-indigo-300 border-indigo-500/30 bg-indigo-500/10" },
-  buy: { label: "Looking to buy", cls: "text-cyan-300 border-cyan-500/30 bg-cyan-500/10" },
-  rent: { label: "For rent", cls: "text-orange-300 border-orange-500/30 bg-orange-500/10" },
-  borrow: { label: "To borrow", cls: "text-emerald-300 border-emerald-500/30 bg-emerald-500/10" },
-};
-
-const isPdf = (url) => typeof url === "string" && url.toLowerCase().endsWith(".pdf");
 
 export default function ListingDetail() {
   const { id } = useParams();
@@ -105,7 +97,10 @@ export default function ListingDetail() {
           </div>
           <h1 className="text-2xl font-serif font-bold mb-2">Listing not found</h1>
           <p className="text-gray-400 mb-8">{error || "This listing may have been removed."}</p>
-          <Link to="/marketplace" className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold px-6 py-3 rounded-xl transition-colors">
+          <Link
+            to="/marketplace"
+            className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold px-6 py-3 rounded-xl transition-colors"
+          >
             <ArrowLeft size={16} /> Back to marketplace
           </Link>
         </div>
@@ -113,15 +108,14 @@ export default function ListingDetail() {
     );
   }
 
-  const cat = CATEGORY_META[listing.category] || CATEGORY_META.sell;
+  const cat = CATEGORIES[listing.category] || CATEGORIES.sell;
+  const statusMeta = STATUS[listing.status] || STATUS.active;
   const seller = listing.sellerId;
   const isOwner = user && seller && user._id === seller._id;
   const pdfs = (listing.images || []).filter(isPdf);
   const hasPdf = pdfs.length > 0;
 
-  const priceLabel = listing.category === "rent" || listing.category === "borrow"
-    ? `Rs. ${listing.price?.toLocaleString()} / ${listing.rentPeriod || "day"}`
-    : `Rs. ${listing.price?.toLocaleString()}`;
+  const priceLabel = formatPrice(listing.price, listing.category, listing.rentPeriod);
 
   return (
     <div data-nav-theme="dark" className="relative min-h-screen bg-[#09090b] text-white overflow-hidden">
@@ -135,23 +129,25 @@ export default function ListingDetail() {
         </Link>
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-10">
-          {/* Left: gallery + content */}
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: EASE }} className="space-y-8">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: EASE }}
+            className="space-y-8"
+          >
             <DetailGallery images={listing.images || []} title={listing.title} />
 
             <div>
               <div className="flex flex-wrap items-center gap-2 mb-3">
-                <span className={`text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full border backdrop-blur-md ${cat.cls}`}>
+                <span className={`text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full border backdrop-blur-md ${cat.pillClass}`}>
                   {cat.label}
+                </span>
+                <span className={`text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full border backdrop-blur-md ${statusMeta.cls}`}>
+                  {statusMeta.label}
                 </span>
                 {hasPdf && (
                   <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full border border-red-500/40 bg-red-500/20 text-red-200 backdrop-blur-md">
                     <FileText size={10} /> {pdfs.length} PDF{pdfs.length > 1 ? "s" : ""}
-                  </span>
-                )}
-                {listing.status !== "active" && (
-                  <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full border border-red-500/40 bg-red-500/20 text-red-200 backdrop-blur-md">
-                    {listing.status}
                   </span>
                 )}
               </div>
@@ -160,7 +156,6 @@ export default function ListingDetail() {
               <p className="text-gray-300 text-base leading-relaxed whitespace-pre-line">{listing.description}</p>
             </div>
 
-            {/* PDF attachments */}
             {hasPdf && (
               <div>
                 <h2 className="text-sm font-bold uppercase tracking-widest text-gray-500 mb-3">Attachments</h2>
@@ -190,8 +185,12 @@ export default function ListingDetail() {
             )}
           </motion.div>
 
-          {/* Right: price + seller + action */}
-          <motion.aside initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.15, ease: EASE }} className="space-y-5 lg:sticky lg:top-32 self-start">
+          <motion.aside
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.15, ease: EASE }}
+            className="space-y-5 lg:sticky lg:top-32 self-start"
+          >
             <div className="bg-[#14121f] border border-white/10 rounded-2xl p-6">
               <div className="text-[10px] uppercase tracking-[0.3em] text-gray-500 font-bold mb-2">Price</div>
               <div className="text-4xl font-black text-white tracking-tight mb-6">{priceLabel}</div>
@@ -205,14 +204,23 @@ export default function ListingDetail() {
                   <span className="text-gray-500 flex items-center gap-2"><Clock size={14} /> Listed</span>
                   <span className="text-white">{new Date(listing.createdAt).toLocaleDateString()}</span>
                 </div>
+                {listing.returnDeadline && (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-500 flex items-center gap-2"><CalendarClock size={14} /> Return by</span>
+                    <span className="text-white">{new Date(listing.returnDeadline).toLocaleDateString()}</span>
+                  </div>
+                )}
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-500 flex items-center gap-2"><ShieldCheck size={14} /> Verified</span>
-                  <span className="text-emerald-400 font-bold">Yes</span>
+                  <span className="text-gray-500 flex items-center gap-2"><ShieldCheck size={14} /> Seller verified</span>
+                  <span className={seller?.isVerified ? "text-emerald-400 font-bold" : "text-gray-400 font-bold"}>
+                    {seller?.isVerified ? "Yes" : "No"}
+                  </span>
                 </div>
               </div>
 
               {isOwner ? (
-                <div className="space-y-2">
+                <div className="space-y-3">
+                  <StatusControl listing={listing} onChange={setListing} />
                   <Link
                     to={`/marketplace/${listing._id}/edit`}
                     className="w-full inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/15 text-white text-sm font-bold px-5 py-3 rounded-xl transition-colors"
@@ -234,9 +242,13 @@ export default function ListingDetail() {
                   className="w-full inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold px-5 py-3.5 rounded-xl transition-all shadow-[0_0_24px_rgba(79,70,229,0.35)] disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   {requesting ? (
-                    <><Loader2 size={16} className="animate-spin" /> Opening chat…</>
+                    <>
+                      <Loader2 size={16} className="animate-spin" /> Opening chat…
+                    </>
                   ) : (
-                    <><MessageCircle size={16} /> Request / Chat with seller</>
+                    <>
+                      <MessageCircle size={16} /> Request / Chat with seller
+                    </>
                   )}
                 </button>
               )}
@@ -247,7 +259,6 @@ export default function ListingDetail() {
         </div>
       </div>
 
-      {/* Delete confirmation modal */}
       {confirmDelete && (
         <div
           className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm grid place-items-center px-4"
@@ -279,7 +290,13 @@ export default function ListingDetail() {
                 disabled={deleting}
                 className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition-colors disabled:opacity-50"
               >
-                {deleting ? <><Loader2 size={14} className="animate-spin" /> Deleting…</> : <>Delete</>}
+                {deleting ? (
+                  <>
+                    <Loader2 size={14} className="animate-spin" /> Deleting…
+                  </>
+                ) : (
+                  <>Delete</>
+                )}
               </button>
             </div>
           </motion.div>

@@ -1,8 +1,7 @@
-// client/src/pages/SpotlightClaim.jsx
-import { useState, useContext } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useState, useContext, useEffect } from "react";
+import { useNavigate, Link, useLocation, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { FiArrowLeft, FiLoader, FiUploadCloud, FiX, FiCheckCircle } from "react-icons/fi";
+import { FiArrowLeft, FiLoader, FiUploadCloud, FiX, FiCheckCircle, FiStar } from "react-icons/fi";
 import { Navbar } from "../components/layout/Navbar";
 import { AuthContext } from "../context/AuthContext";
 import { submitSpotlightClaim } from "../services/spotlightService";
@@ -14,7 +13,18 @@ const LABEL = "block text-xs font-semibold text-stone-600 uppercase tracking-wid
 
 export default function SpotlightClaim() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useContext(AuthContext);
+  
+  const targetType = searchParams.get("targetType") || "user";
+  const targetId = searchParams.get("targetId") || null;
+
+  useEffect(() => {
+    console.log("[SPOTLIGHT CLAIM] URL params:");
+    console.log("  targetType:", targetType);
+    console.log("  targetId:", targetId);
+  }, [targetType, targetId]);
+
   const [txnId, setTxnId] = useState("");
   const [screenshot, setScreenshot] = useState(null);
   const [uploading, setUploading] = useState(false);
@@ -44,7 +54,12 @@ export default function SpotlightClaim() {
     }
     setSubmitting(true);
     try {
-      await submitSpotlightClaim({ txnId: txnId.trim(), screenshot });
+      await submitSpotlightClaim({ 
+        txnId: txnId.trim(), 
+        screenshot,
+        targetType,
+        targetId,
+      });
       setSuccess(true);
     } catch (err) {
       setError(err.response?.data?.message || "Could not submit claim");
@@ -61,11 +76,9 @@ export default function SpotlightClaim() {
             <FiCheckCircle size={40} className="text-emerald-600" />
           </div>
           <h1 className="text-2xl font-serif font-bold text-stone-900 mb-2">Claim submitted</h1>
-          <p className="text-stone-500 mb-8">
-            The club will verify your payment against the eSewa statement and assign your slot shortly.
-          </p>
-          <Link to="/spotlight" className="inline-flex items-center gap-2 bg-stone-900 hover:bg-stone-800 text-white text-sm font-semibold px-6 py-3 rounded-xl">
-            Back to spotlight
+          <p className="text-stone-500 mb-8">The club will verify your payment against the eSewa statement and assign your slot shortly.</p>
+          <Link to={targetType === "event" ? `/events/${targetId}` : "/spotlight"} className="inline-flex items-center gap-2 bg-stone-900 hover:bg-stone-800 text-white text-sm font-semibold px-6 py-3 rounded-xl">
+            Back to {targetType === "event" ? "event" : "spotlight"}
           </Link>
         </div>
       </div>
@@ -76,18 +89,31 @@ export default function SpotlightClaim() {
     <div className="min-h-screen bg-[#fafaf8]">
       <Navbar />
       <div className="max-w-2xl mx-auto pt-32 pb-24 px-4 sm:px-6">
-        <Link to="/spotlight" className="inline-flex items-center gap-2 text-sm text-stone-500 hover:text-stone-900 mb-6">
-          <FiArrowLeft size={16} /> Back to spotlight
+        <Link to={targetType === "event" ? `/events/${targetId}` : "/spotlight"} className="inline-flex items-center gap-2 text-sm text-stone-500 hover:text-stone-900 mb-6">
+          <FiArrowLeft size={16} /> Back to {targetType === "event" ? "event" : "spotlight"}
         </Link>
 
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: EASE }} className="mb-8">
-          <p className="text-purple-600 text-[11px] tracking-[0.3em] uppercase font-bold mb-2">Claim your slot</p>
+          <p className="text-purple-600 text-[11px] tracking-[0.3em] uppercase font-bold mb-2">
+            {targetType === "event" ? "Spotlight your event" : "Claim your slot"}
+          </p>
           <h1 className="text-3xl md:text-4xl font-serif font-bold text-stone-900">
             Rs. 50 · <span className="italic text-purple-700">one week on top.</span>
           </h1>
         </motion.div>
 
-        {/* Payment instructions */}
+        {targetType === "event" && targetId && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-purple-50 border border-purple-200 rounded-2xl p-4 mb-6 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-purple-500 grid place-items-center shrink-0">
+              <FiStar size={18} className="text-white fill-white" />
+            </div>
+            <div>
+              <div className="text-[10px] uppercase tracking-widest font-bold text-purple-600">Spotlighting Event</div>
+              <div className="text-sm font-bold text-stone-900">Event ID: {targetId.slice(-6)}</div>
+            </div>
+          </motion.div>
+        )}
+
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1 }} className="bg-white border border-stone-200 rounded-2xl p-6 md:p-8 mb-6">
           <h2 className="text-sm font-bold uppercase tracking-widest text-stone-400 border-b border-stone-100 pb-2 mb-4">Step 1 — Pay Rs. 50</h2>
           <p className="text-sm text-stone-600 mb-4">Send Rs. 50 via eSewa to the club's account:</p>
@@ -96,12 +122,9 @@ export default function SpotlightClaim() {
             <div className="font-mono text-lg font-bold text-purple-900">9800000000</div>
             <div className="text-xs text-purple-700 mt-1">ACIT Research Chair</div>
           </div>
-          <p className="text-xs text-stone-500">
-            After paying, note your <strong>transaction ID</strong> and take a screenshot. You'll upload both below.
-          </p>
+          <p className="text-xs text-stone-500">After paying, note your <strong>transaction ID</strong> and take a screenshot. You'll upload both below.</p>
         </motion.div>
 
-        {/* Claim form */}
         <motion.form onSubmit={submit} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }} className="bg-white border border-stone-200 rounded-2xl p-6 md:p-8 space-y-5">
           <h2 className="text-sm font-bold uppercase tracking-widest text-stone-400 border-b border-stone-100 pb-2">Step 2 — Submit proof</h2>
 
@@ -115,13 +138,7 @@ export default function SpotlightClaim() {
             {screenshot ? (
               <div className="relative inline-block">
                 <img src={screenshot} alt="Payment proof" className="w-40 rounded-xl border border-stone-200" />
-                <button
-                  type="button"
-                  onClick={() => setScreenshot(null)}
-                  className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-red-600 text-white grid place-items-center hover:bg-red-500"
-                >
-                  <FiX size={12} />
-                </button>
+                <button type="button" onClick={() => setScreenshot(null)} className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-red-600 text-white grid place-items-center hover:bg-red-500"><FiX size={12} /></button>
               </div>
             ) : (
               <label className="cursor-pointer flex flex-col items-center justify-center border-2 border-dashed border-stone-300 hover:border-purple-400 rounded-xl py-8 px-4 text-center transition-colors">
@@ -138,7 +155,7 @@ export default function SpotlightClaim() {
           {error && <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">{error}</div>}
 
           <div className="flex justify-end gap-3 pt-2 border-t border-stone-100">
-            <Link to="/spotlight" className="px-5 py-3 text-sm font-semibold text-stone-500 hover:text-stone-900">Cancel</Link>
+            <Link to={targetType === "event" ? `/events/${targetId}` : "/spotlight"} className="px-5 py-3 text-sm font-semibold text-stone-500 hover:text-stone-900">Cancel</Link>
             <motion.button type="submit" disabled={submitting || uploading} whileHover={!submitting ? { y: -1 } : undefined} className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-sm font-semibold px-6 py-3 rounded-xl disabled:opacity-40 shadow-[0_4px_20px_-4px_rgba(139,92,246,0.5)]">
               {submitting ? <><FiLoader size={14} className="animate-spin" /> Submitting…</> : "Submit claim"}
             </motion.button>

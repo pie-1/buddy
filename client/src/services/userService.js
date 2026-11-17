@@ -12,14 +12,8 @@ export const fetchProfileById = async (id) => {
 };
 
 export const updateMyProfile = async (payload) => {
-  try {
-    const { data } = await api.put("/users/me", payload);
-    return data;
-  } catch (error) {
-    // Log the exact backend response to the console so we can see it!
-    console.error("Backend save error:", error.response?.data || error.message);
-    throw error;
-  }
+  const { data } = await api.put("/users/me", payload);
+  return data;
 };
 
 export const fetchDirectory = async ({ search, department, role, year } = {}) => {
@@ -29,5 +23,15 @@ export const fetchDirectory = async ({ search, department, role, year } = {}) =>
   if (role && role !== "All") params.append("role", role);
   if (year) params.append("year", year);
   const { data } = await api.get(`/users?${params.toString()}`);
+  return data;
+};
+
+export const likeUser = async (id) => {
+  const { data } = await api.post(`/users/${id}/like`);
+  return data;
+};
+
+export const unlikeUser = async (id) => {
+  const { data } = await api.delete(`/users/${id}/like`);
   return data;
 };

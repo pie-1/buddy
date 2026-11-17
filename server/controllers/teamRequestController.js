@@ -1,4 +1,3 @@
-// server/controllers/teamRequestController.js
 import TeamRequest from "../models/TeamRequest.js";
 import Event from "../models/Event.js";
 
@@ -46,7 +45,6 @@ export const getTeamRequestsForEvent = async (req, res) => {
       .populate("posterId", "name university trustScore spotlightUntil")
       .sort({ createdAt: -1 });
 
-    // Spotlight posters' requests float to top
     trs.sort((a, b) => {
       const aSpot = a.posterId?.spotlightUntil && a.posterId.spotlightUntil > now ? 1 : 0;
       const bSpot = b.posterId?.spotlightUntil && b.posterId.spotlightUntil > now ? 1 : 0;

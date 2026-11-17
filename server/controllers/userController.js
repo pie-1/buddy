@@ -1,4 +1,3 @@
-// server/controllers/userController.js
 import User from "../models/User.js";
 import Listing from "../models/Listing.js";
 import Roommate from "../models/Roommate.js";
@@ -6,8 +5,10 @@ import Event from "../models/Event.js";
 import TeamRequest from "../models/TeamRequest.js";
 import Conversation from "../models/Conversation.js";
 import HelpPost from "../models/HelpPost.js";
-import { calculateCommonGround, getViewerPeers } from "../utils/commonGround.js"; 
 import CollegeRequest from "../models/CollegeRequest.js";
+import SpotlightClaim from "../models/SpotlightClaim.js";
+import { calculateCommonGround, getViewerPeers } from "../utils/commonGround.js";
+import { TRUST_POINTS } from "../utils/trustScore.js";
 
 export const getMyProfile = async (req, res) => {
   try {
@@ -27,17 +28,32 @@ export const getProfileById = async (req, res) => {
     const user = await User.findById(id).select("-password -otp -otpExpires -email");
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    // Get viewer's full profile so we can compare skills/department
     const viewer = await User.findById(viewerId).select("department university skills");
+
+    let adminStats = null;
+    if (user.role === "admin" || user.role === "moderator") {
+      const [verifications, claimsHandled, eventsOrganized] = await Promise.all([
+        CollegeRequest.countDocuments({ reviewedBy: id, status: { $in: ["approved", "rejected"] } }),
+        SpotlightClaim.countDocuments({ reviewedBy: id }),
+        Event.countDocuments({ organizerId: id }),
+      ]);
+      adminStats = {
+        verifications: verifications || 0,
+        reportsHandled: claimsHandled || 0,
+        eventsOrganized: eventsOrganized || 0,
+        impact: (verifications || 0) + (claimsHandled || 0) + (eventsOrganized || 0),
+      };
+    }
+
     const viewerPeers = await getViewerPeers(viewerId, Conversation);
+    const commonGround = calculateCommonGround(viewer, user, user, viewerPeers);
 
     const [listings, roommate, events, teamRequests, helpPosts, mutual] = await Promise.all([
       Listing.find({ sellerId: id, status: "active" }).sort({ createdAt: -1 }).limit(12),
       Roommate.findOne({ postedBy: id, status: { $ne: "hidden" } }).select("-__v"),
       Event.find({ "rsvps.userId": id, "rsvps.status": "going", status: { $in: ["upcoming", "ongoing"] } })
         .select("title date venue coverImage mode tags").sort({ date: 1 }).limit(10),
-      TeamRequest.find({ posterId: id, status: "open" })
-        .populate("eventId", "title date").sort({ createdAt: -1 }).limit(10),
+      TeamRequest.find({ posterId: id, status: "open" }).populate("eventId", "title date").sort({ createdAt: -1 }).limit(10),
       HelpPost.find({ authorId: id, status: "open" }).sort({ createdAt: -1 }).limit(10),
       computeMutual(viewerId, id),
     ]);
@@ -49,24 +65,19 @@ export const getProfileById = async (req, res) => {
       until: user.spotlightUntil,
     };
 
-    // Calculate Common Ground between viewer and this profile
-    // We pass the viewed user as the "poster" to check shared traits
-    const commonGround = calculateCommonGround(viewer, user, user, viewerPeers);
-
     res.json({
-      user: { ...user.toObject(), isAlumni: user.isAlumni },
-      listings,
-      roommate,
-      events,
-      teamRequests,
-      helpPosts,
-      mutual,
-      spotlight,
-      // Send the score and reasons to the frontend
+      user: {
+        ...user.toObject(),
+        isAlumni: user.isAlumni,
+        likesCount: user.likesReceived?.length || 0,
+        isLikedByMe: user.likesReceived?.some((lid) => lid.toString() === viewerId.toString()) || false,
+      },
+      listings, roommate, events, teamRequests, helpPosts, mutual, spotlight,
+      adminStats,
       commonGround: {
         score: commonGround.score,
-        reasons: commonGround.reason ? [commonGround.reason] : [] 
-      }
+        reasons: commonGround.reason ? [commonGround.reason] : [],
+      },
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -120,9 +131,18 @@ export const updateMyProfile = async (req, res) => {
       }
     }
 
+    const isComplete =
+      user.bio && user.bio.length > 20 &&
+      user.department &&
+      user.skills && user.skills.length >= 3;
+
+    if (isComplete && !user.profileBonusAwarded) {
+      user.trustScore = (user.trustScore || 0) + TRUST_POINTS.FIRST_PROFILE_COMPLETE;
+      user.profileBonusAwarded = true;
+    }
+
     const saved = await user.save();
-    
-    // Strip sensitive data
+
     const safe = saved.toObject();
     delete safe.password;
     delete safe.otp;
@@ -153,20 +173,75 @@ export const getDirectory = async (req, res) => {
     const now = new Date();
 
     const users = await User.find(filter)
-      .select("name avatar bio university college department graduationYear skills trustScore role spotlightUntil createdAt")
+      .select("name avatar bio university college department graduationYear skills trustScore role spotlightUntil createdAt likesReceived")
       .limit(200);
 
-    users.sort((a, b) => {
+    const viewer = await User.findById(req.user._id).select("likesGiven");
+    const likedSet = new Set((viewer?.likesGiven || []).map((id) => id.toString()));
+
+    const decorated = users.map((u) => ({
+      ...u.toObject(),
+      likesCount: u.likesReceived?.length || 0,
+      isLikedByMe: likedSet.has(u._id.toString()),
+    }));
+
+    decorated.sort((a, b) => {
       const aSpot = a.spotlightUntil && a.spotlightUntil > now ? 1 : 0;
       const bSpot = b.spotlightUntil && b.spotlightUntil > now ? 1 : 0;
       if (aSpot !== bSpot) return bSpot - aSpot;
       return new Date(b.createdAt) - new Date(a.createdAt);
     });
 
-    const spotlighted = users.filter((u) => u.spotlightUntil && u.spotlightUntil > now).slice(0, 3);
-    const rest = users.filter((u) => !u.spotlightUntil || u.spotlightUntil <= now);
+    const spotlighted = decorated.filter((u) => u.spotlightUntil && u.spotlightUntil > now).slice(0, 3);
+    const rest = decorated.filter((u) => !u.spotlightUntil || u.spotlightUntil <= now);
 
     res.json({ spotlighted, all: rest });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const likeUser = async (req, res) => {
+  try {
+    const targetId = req.params.id;
+    if (targetId === req.user._id.toString()) {
+      return res.status(400).json({ message: "You cannot like yourself" });
+    }
+    const target = await User.findById(targetId);
+    if (!target) return res.status(404).json({ message: "User not found" });
+
+    if (!target.likesReceived.some((id) => id.toString() === req.user._id.toString())) {
+      target.likesReceived.push(req.user._id);
+      await target.save();
+
+      const me = await User.findById(req.user._id);
+      if (!me.likesGiven.some((id) => id.toString() === targetId)) {
+        me.likesGiven.push(targetId);
+        await me.save();
+      }
+    }
+    res.json({ likesCount: target.likesReceived.length, isLikedByMe: true });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const unlikeUser = async (req, res) => {
+  try {
+    const targetId = req.params.id;
+    const target = await User.findById(targetId);
+    if (!target) return res.status(404).json({ message: "User not found" });
+
+    target.likesReceived = target.likesReceived.filter(
+      (id) => id.toString() !== req.user._id.toString()
+    );
+    await target.save();
+
+    const me = await User.findById(req.user._id);
+    me.likesGiven = me.likesGiven.filter((id) => id.toString() !== targetId);
+    await me.save();
+
+    res.json({ likesCount: target.likesReceived.length, isLikedByMe: false });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

@@ -1,4 +1,3 @@
-// server/models/Roommate.js
 import mongoose from "mongoose";
 
 const roommateSchema = new mongoose.Schema(
@@ -11,14 +10,10 @@ const roommateSchema = new mongoose.Schema(
     title: { type: String, required: true, trim: true },
     description: { type: String, required: true },
     bio: { type: String, default: "" },
-
-    // Room details (mostly for have-room, but tenants may still post these when sharing)
     rent: { type: Number, default: 0, min: 0 },
     area: { type: String, required: true, trim: true },
     location: {
-      address: { type: String, trim: true },
-      lat: { type: Number, default: null },
-      lng: { type: Number, default: null },
+      raw: { type: String, default: "" },
     },
     roomType: {
       type: String,
@@ -37,7 +32,6 @@ const roommateSchema = new mongoose.Schema(
     },
     amenities: [{ type: String }],
 
-    // Looking-for-room specific
     budgetMin: { type: Number, default: null },
     budgetMax: { type: Number, default: null },
     preferredAreas: [{ type: String }],

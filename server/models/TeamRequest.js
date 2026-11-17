@@ -1,4 +1,3 @@
-// server/models/TeamRequest.js
 import mongoose from "mongoose";
 
 const teamRequestSchema = new mongoose.Schema(

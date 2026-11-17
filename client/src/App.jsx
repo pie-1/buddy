@@ -11,6 +11,7 @@ const DocsPage = lazy(() => import("./pages/DocsPage"));
 const Marketplace = lazy(() => import("./pages/Marketplace"));
 const ListingDetail = lazy(() => import("./pages/ListingDetail"));
 const CreateListing = lazy(() => import("./pages/CreateListing"));
+const EditListing = lazy(() => import("./pages/EditListing"));
 const Chat = lazy(() => import("./pages/Chat"));
 const Roommates = lazy(() => import("./pages/Roommates"));
 const CreateRoommate = lazy(() => import("./pages/CreateRoommate"));
@@ -85,6 +86,7 @@ export default function App() {
           <Route path="/marketplace" element={<Marketplace />} />
           <Route path="/marketplace/new" element={<ProtectedRoute><CreateListing /></ProtectedRoute>} />
           <Route path="/marketplace/:id" element={<ListingDetail />} />
+          <Route path="/marketplace/:id/edit" element={<ProtectedRoute><EditListing /></ProtectedRoute>} />
 
           <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
           <Route path="/chat/:id" element={<ProtectedRoute><Chat /></ProtectedRoute>} />

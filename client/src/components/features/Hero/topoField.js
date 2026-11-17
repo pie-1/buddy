@@ -1,18 +1,17 @@
-// client/src/components/ui/topoField.js
 import { contours } from "d3-contour";
 
 const CELL = 20;
 const LEVELS = Array.from({ length: 30 }, (_, i) => 0.06 + i * 0.042);
 const MAJOR_EVERY = 5;
 
-const LEAN = 0.2; // pointer parallax: only the lines drift, gently
+const LEAN = 0.2; 
 const WAKE_SIGMA = 120;
 const WAKE_REACH = WAKE_SIGMA * 3;
 const WAKE_FADE = 0.985;
 
-// click / tap ripple: a ring of terrain that rolls outward and fades
-const RIPPLE_LIFE = 2.2; // seconds
-const RIPPLE_SPEED = 380; // px per second
+// a ring of terrain that rolls outward and fades
+const RIPPLE_LIFE = 2.2; 
+const RIPPLE_SPEED = 380; 
 const RIPPLE_W = 38;
 const RIPPLE_AMP = 0.14;
 
@@ -171,7 +170,6 @@ export function createTopoField(canvas) {
     }
   }
 
-  // flow: scroll-driven offset so the terrain gently morphs as you scroll
   function draw({ t, dt, x, y, speed, on, mx, my, flow = 0 }) {
     if (frame++ % 2 === 0) sampleAmbient(t, -mx * LEAN, -my * LEAN, flow);
     relaxWake(dt);
@@ -191,10 +189,8 @@ export function createTopoField(canvas) {
     ctx.clearRect(0, 0, W, H);
     ctx.lineJoin = "round";
     ctx.setTransform(dpr, 0, 0, dpr, -CELL * dpr, -CELL * dpr);
-    // The lines near the pointer light up (warm orange core, violet falloff). Alpha scales with `on`,
-    // so with no pointer the gradient collapses into the normal flat colours.
     const glow = Math.min(1, on);
-    const hx = x + CELL; // path space = screen + CELL (see the transform above)
+    const hx = x + CELL; 
     const hy = y + CELL;
     const gMinor = ctx.createRadialGradient(hx, hy, 0, hx, hy, 300);
     gMinor.addColorStop(0, `rgba(139,92,246,${(0.38 * glow).toFixed(3)})`);

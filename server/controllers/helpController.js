@@ -1,4 +1,3 @@
-// server/controllers/helpController.js
 import HelpPost from "../models/HelpPost.js";
 
 export const createHelpPost = async (req, res) => {

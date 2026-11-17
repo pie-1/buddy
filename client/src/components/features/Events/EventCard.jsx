@@ -30,8 +30,10 @@ export default function EventCard({ event, index = 0 }) {
   const isClosing = deadlineDays !== null && deadlineDays >= 0 && deadlineDays <= 3;
   const isEnded = deadlineDays !== null && deadlineDays < 0;
   const isLive = daysUntil(event.date) === 0;
-  const isSpotlight =
-    event.organizerId?.spotlightUntil && new Date(event.organizerId.spotlightUntil) > new Date();
+  
+  const isEventSpotlight = event.spotlightUntil && new Date(event.spotlightUntil) > new Date();
+  const isOrganizerSpotlight = event.organizerId?.spotlightUntil && new Date(event.organizerId.spotlightUntil) > new Date();
+  const isSpotlight = isEventSpotlight || isOrganizerSpotlight;
 
   return (
     <motion.div
@@ -51,14 +53,9 @@ export default function EventCard({ event, index = 0 }) {
             : "border-stone-200/80 hover:border-stone-300 shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_32px_-12px_rgba(0,0,0,0.12)]"
         }`}
       >
-        {/* Banner */}
         <div className="relative sm:w-64 shrink-0 h-44 sm:h-auto overflow-hidden bg-stone-100">
           {event.coverImage ? (
-            <img
-              src={event.coverImage}
-              alt={event.title}
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-            />
+            <img src={event.coverImage} alt={event.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-stone-300">
               <Calendar size={48} />
@@ -75,18 +72,15 @@ export default function EventCard({ event, index = 0 }) {
             </span>
           )}
           {isEnded && (
-            <span className="absolute top-3 left-3 text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-stone-700 text-white">
-              Ended
-            </span>
+            <span className="absolute top-3 left-3 text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-stone-700 text-white">Ended</span>
           )}
           {isSpotlight && (
             <span className="absolute bottom-3 right-3 inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-[0_0_12px_rgba(139,92,246,0.5)]">
-              <Star size={9} fill="currentColor" /> Spotlight
+              <Star size={9} fill="currentColor" /> {isEventSpotlight ? "Event Spotlight" : "Spotlight Host"}
             </span>
           )}
         </div>
 
-        {/* Content */}
         <div className="flex-1 p-5 sm:p-6 min-w-0 flex flex-col">
           <div className="flex items-start justify-between gap-3 mb-3">
             <h3 className="text-lg sm:text-xl font-serif font-bold text-stone-900 leading-snug group-hover:text-orange-700 transition-colors line-clamp-2">
@@ -102,10 +96,7 @@ export default function EventCard({ event, index = 0 }) {
             </div>
             <div className="flex items-center gap-2">
               <Calendar size={14} className="text-stone-400 shrink-0" />
-              <span>
-                {new Date(event.date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
-                {event.endDate && ` → ${new Date(event.endDate).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}`}
-              </span>
+              <span>{new Date(event.date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</span>
             </div>
             <div className="flex items-center gap-2">
               <Users size={14} className="text-stone-400 shrink-0" />
@@ -121,16 +112,10 @@ export default function EventCard({ event, index = 0 }) {
           {event.tags?.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mt-auto">
               {event.tags.slice(0, 5).map((tag) => (
-                <span
-                  key={tag}
-                  className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border ${TAG_STYLES[tag] || "bg-stone-100 text-stone-700 border-stone-200"}`}
-                >
+                <span key={tag} className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border ${TAG_STYLES[tag] || "bg-stone-100 text-stone-700 border-stone-200"}`}>
                   {tag}
                 </span>
               ))}
-              {event.tags.length > 5 && (
-                <span className="text-[10px] font-semibold text-stone-400 px-1.5 py-1">+{event.tags.length - 5}</span>
-              )}
             </div>
           )}
         </div>

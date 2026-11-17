@@ -1,4 +1,3 @@
-// server/sockets/chatSocket.js
 import { Server } from "socket.io";
 import jwt from "jsonwebtoken";
 import Conversation from "../models/Conversation.js";
@@ -71,7 +70,6 @@ export function initSocket(httpServer) {
         };
         await convo.save();
 
-        // Populate sender avatar as well
         const populated = await msg.populate("senderId", "name avatar");
 
         io.to(`convo:${conversationId}`).emit("new-message", populated);

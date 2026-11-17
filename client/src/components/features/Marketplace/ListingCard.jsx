@@ -2,20 +2,7 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ShieldCheck, FileText, Star } from "lucide-react";
-
-const CATEGORY = {
-  sell: { label: "Sell", cls: "text-indigo-300 border-indigo-500/30 bg-indigo-500/10", glow: "rgba(99,102,241,0.4)" },
-  buy: { label: "Buy", cls: "text-cyan-300 border-cyan-500/30 bg-cyan-500/10", glow: "rgba(6,182,212,0.4)" },
-  rent: { label: "Rent", cls: "text-orange-300 border-orange-500/30 bg-orange-500/10", glow: "rgba(249,115,22,0.4)" },
-  borrow: { label: "Borrow", cls: "text-emerald-300 border-emerald-500/30 bg-emerald-500/10", glow: "rgba(16,185,129,0.4)" },
-};
-
-const PRICE_FORMAT = {
-  sell: (p) => `Rs. ${p.toLocaleString()}`,
-  buy: (p) => `Rs. ${p.toLocaleString()}`,
-  rent: (p, period) => `Rs. ${p.toLocaleString()} / ${period || "day"}`,
-  borrow: (p, period) => `Rs. ${p.toLocaleString()} / ${period || "day"}`,
-};
+import { CATEGORIES, STATUS, isPdf, formatPrice } from "../../../constants/marketplace";
 
 const cardVariants = {
   hidden: { opacity: 0, y: 24 },
@@ -23,17 +10,17 @@ const cardVariants = {
 };
 
 export default function ListingCard({ listing, index = 0 }) {
-  const cat = CATEGORY[listing.category] || CATEGORY.sell;
+  const cat = CATEGORIES[listing.category] || CATEGORIES.sell;
   const images = listing.images || [];
   const cover = images[0];
-  const hasPdf = images.some((url) => typeof url === "string" && url.toLowerCase().endsWith(".pdf"));
-  const priceLabel = (PRICE_FORMAT[listing.category] || PRICE_FORMAT.sell)(listing.price, listing.rentPeriod);
+  const hasPdf = images.some(isPdf);
+  const priceLabel = formatPrice(listing.price, listing.category, listing.rentPeriod);
   const seller = listing.sellerId;
-  const statusBadge = listing.status !== "active" && listing.status;
+  const statusMeta = listing.status !== "active" ? STATUS[listing.status] : null;
   const isSpotlight = seller?.spotlightUntil && new Date(seller.spotlightUntil) > new Date();
 
-  const coverIsPdf = typeof cover === "string" && cover.toLowerCase().endsWith(".pdf");
-  const nonPdfImage = images.find((u) => typeof u === "string" && !u.toLowerCase().endsWith(".pdf"));
+  const coverIsPdf = isPdf(cover);
+  const nonPdfImage = images.find((u) => !isPdf(u));
   const displayCover = coverIsPdf ? nonPdfImage : cover;
 
   return (
@@ -48,7 +35,7 @@ export default function ListingCard({ listing, index = 0 }) {
     >
       <Link
         to={`/marketplace/${listing._id}`}
-        className={`relative block h-full flex flex-col bg-[#14121f] border rounded-2xl overflow-hidden transition-all duration-300 ${
+        className={`relative flex flex-col h-full bg-[#14121f] border rounded-2xl overflow-hidden transition-all duration-300 ${
           isSpotlight ? "border-purple-500/50 hover:border-purple-400" : "border-white/10 hover:border-white/25"
         }`}
         style={{
@@ -62,13 +49,13 @@ export default function ListingCard({ listing, index = 0 }) {
           style={{ background: `radial-gradient(circle at 50% 0%, ${cat.glow}, transparent 60%)` }}
         />
 
-        {/* media */}
-        <div className="relative h-44 bg-white/5 overflow-hidden shrink-0">
+        {/* media — aspect ratio keeps images uncropped-looking and consistent */}
+        <div className="relative aspect-[4/3] bg-white/5 overflow-hidden shrink-0">
           {displayCover ? (
             <img
               src={displayCover}
               alt={listing.title}
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
             />
           ) : coverIsPdf ? (
             <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-red-400/60">
@@ -81,34 +68,29 @@ export default function ListingCard({ listing, index = 0 }) {
             </div>
           )}
 
-          {/* category pill */}
-          <span className={`absolute top-3 left-3 text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full border backdrop-blur-md ${cat.cls}`}>
+          <span className={`absolute top-3 left-3 text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full border backdrop-blur-md ${cat.pillClass}`}>
             {cat.label}
           </span>
 
-          {/* spotlight pill */}
           {isSpotlight && (
             <span className="absolute top-3 right-3 inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-[0_0_12px_rgba(139,92,246,0.5)]">
               <Star size={9} fill="currentColor" /> Spotlight
             </span>
           )}
 
-          {/* PDF badge */}
           {hasPdf && (
             <span className="absolute bottom-3 left-3 flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded-full bg-red-500/20 border border-red-500/40 text-red-200 backdrop-blur-md">
               <FileText size={10} /> PDF
             </span>
           )}
 
-          {/* status pill */}
-          {statusBadge && (
-            <span className="absolute bottom-3 right-3 text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full border border-red-500/40 bg-red-500/20 text-red-200 backdrop-blur-md">
-              {listing.status}
+          {statusMeta && (
+            <span className={`absolute bottom-3 right-3 text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full border backdrop-blur-md ${statusMeta.cls}`}>
+              {statusMeta.label}
             </span>
           )}
         </div>
 
-        {/* body */}
         <div className="relative p-5 flex flex-col flex-1">
           <h3 className="text-white font-bold text-base leading-snug line-clamp-2 mb-2 group-hover:text-indigo-300 transition-colors">
             {listing.title}

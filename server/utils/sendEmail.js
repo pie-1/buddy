@@ -1,21 +1,24 @@
 // server/utils/sendEmail.js
 import nodemailer from "nodemailer";
 
-export const sendOTPEmail = async (email, otp) => {
+let transporter = null;
+
+function getTransporter() {
+  if (transporter) return transporter;
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
     throw new Error("Email credentials are missing from environment variables");
   }
-
-  // Create the transporter
-  const transporter = nodemailer.createTransport({
+  transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
       user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS, // This MUST be the App Password, not your Gmail login
+      pass: process.env.EMAIL_PASS, // App Password, not Gmail login
     },
   });
+  return transporter;
+}
 
-  // Beautiful dark-mode email template matching your brand
+export const sendOTPEmail = async (email, otp) => {
   const htmlTemplate = `
     <div style="background-color: #09090b; color: #fafafa; font-family: Arial, sans-serif; padding: 40px; text-align: center; border-radius: 16px; max-width: 500px; margin: 0 auto; border: 1px solid rgba(255,255,255,0.1);">
       <h1 style="color: #fb923c; margin-bottom: 20px; font-size: 24px;">CollegeBuddy</h1>
@@ -35,11 +38,11 @@ export const sendOTPEmail = async (email, otp) => {
   };
 
   try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log(`✅ OTP Email sent successfully to ${email}. Message ID: ${info.messageId}`);
+    const info = await getTransporter().sendMail(mailOptions);
+    console.log(`OTP Email sent to ${email}. ID: ${info.messageId}`);
     return info;
   } catch (error) {
-    console.error("❌ Nodemailer Error:", error.message);
+    console.error("Nodemailer Error:", error.message);
     throw new Error("Failed to send OTP email");
   }
 };

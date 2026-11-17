@@ -1,4 +1,3 @@
-// client/src/pages/CreateRoommate.jsx
 import { useContext, useState, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";

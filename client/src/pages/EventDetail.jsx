@@ -34,16 +34,7 @@ const daysUntil = (d) => (d ? Math.ceil((new Date(d) - new Date()) / 86400000) :
 function toICS(event) {
   const dt = (d) => new Date(d).toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
   const end = event.endDate || new Date(new Date(event.date).getTime() + 2 * 60 * 60 * 1000);
-  return [
-    "BEGIN:VCALENDAR", "VERSION:2.0", "BEGIN:VEVENT",
-    `UID:${event._id}@collegebuddy`,
-    `DTSTAMP:${dt(new Date())}`,
-    `DTSTART:${dt(event.date)}`, `DTEND:${dt(end)}`,
-    `SUMMARY:${event.title}`,
-    `DESCRIPTION:${event.description.replace(/\n/g, "\\n")}`,
-    `LOCATION:${event.venue}`,
-    "END:VEVENT", "END:VCALENDAR",
-  ].join("\r\n");
+  return ["BEGIN:VCALENDAR", "VERSION:2.0", "BEGIN:VEVENT", `UID:${event._id}@collegebuddy`, `DTSTAMP:${dt(new Date())}`, `DTSTART:${dt(event.date)}`, `DTEND:${dt(end)}`, `SUMMARY:${event.title}`, `DESCRIPTION:${event.description.replace(/\n/g, "\\n")}`, `LOCATION:${event.venue}`, "END:VEVENT", "END:VCALENDAR"].join("\r\n");
 }
 
 function MetaItem({ icon: Icon, label, children }) {
@@ -84,18 +75,14 @@ export default function EventDetail() {
         if (cancelled) return;
         setEvent(data);
 
-        const mine = data.rsvps?.find(
-          (r) => r.userId?._id === user?._id || r.userId === user?._id
-        );
+        const mine = data.rsvps?.find((r) => r.userId?._id === user?._id || r.userId === user?._id);
         setRsvp(mine?.status || null);
 
-        // Related events by primary tag
         if (data.tags?.length) {
           const all = await fetchEvents({ tag: data.tags[0] });
           if (!cancelled) setRelated((all || []).filter((e) => e._id !== data._id).slice(0, 3));
         }
 
-        // Team requests linked to this event
         const trs = await fetchTeamRequestsForEvent(id);
         if (!cancelled) setTeamRequests(trs || []);
       } catch (err) {
@@ -189,14 +176,7 @@ export default function EventDetail() {
         </Link>
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8">
-          {/* Left column */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: EASE }}
-            className="space-y-6"
-          >
-            {/* Banner */}
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: EASE }} className="space-y-6">
             <div className="relative h-64 sm:h-96 rounded-2xl overflow-hidden bg-stone-100 border border-stone-200">
               {event.coverImage ? (
                 <img src={event.coverImage} alt={event.title} className="w-full h-full object-cover" />
@@ -206,9 +186,7 @@ export default function EventDetail() {
                 </div>
               )}
               {isEnded && (
-                <div className="absolute top-4 left-4 bg-stone-900/90 backdrop-blur-md text-white text-xs font-bold px-3 py-1.5 rounded-full">
-                  Registration ended
-                </div>
+                <div className="absolute top-4 left-4 bg-stone-900/90 backdrop-blur-md text-white text-xs font-bold px-3 py-1.5 rounded-full">Registration ended</div>
               )}
               {!isEnded && deadlineDays !== null && deadlineDays <= 3 && (
                 <div className="absolute top-4 left-4 bg-orange-600 text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm">
@@ -218,14 +196,10 @@ export default function EventDetail() {
               )}
             </div>
 
-            {/* Body */}
             <div className="bg-white border border-stone-200 rounded-2xl p-6 sm:p-8">
               <div className="flex flex-wrap gap-1.5 mb-4">
                 {event.tags?.map((tag) => (
-                  <span
-                    key={tag}
-                    className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border ${TAG_STYLES[tag] || "bg-stone-100 text-stone-700 border-stone-200"}`}
-                  >
+                  <span key={tag} className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border ${TAG_STYLES[tag] || "bg-stone-100 text-stone-700 border-stone-200"}`}>
                     {tag}
                   </span>
                 ))}
@@ -238,7 +212,6 @@ export default function EventDetail() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6 pb-6 border-b border-stone-100">
                 <MetaItem icon={Calendar} label="Event date">
                   {new Date(event.date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
-                  {event.endDate && ` → ${new Date(event.endDate).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}`}
                 </MetaItem>
                 {event.registrationDeadline && (
                   <MetaItem icon={Calendar} label="Registration ends">
@@ -255,33 +228,29 @@ export default function EventDetail() {
 
               <div className="flex flex-wrap gap-3">
                 {event.registrationLink && (
-                  <a
-                    href={event.registrationLink}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-2 bg-stone-900 hover:bg-stone-800 text-white text-sm font-semibold px-6 py-3 rounded-xl transition-colors shadow-[0_4px_16px_-4px_rgba(0,0,0,0.2)]"
-                  >
+                  <a href={event.registrationLink} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 bg-stone-900 hover:bg-stone-800 text-white text-sm font-semibold px-6 py-3 rounded-xl transition-colors shadow-[0_4px_16px_-4px_rgba(0,0,0,0.2)]">
                     <ExternalLink size={16} /> Register
                   </a>
                 )}
-                <button
-                  onClick={downloadICS}
-                  className="inline-flex items-center gap-2 bg-white hover:bg-stone-50 border border-stone-200 text-stone-900 text-sm font-semibold px-5 py-3 rounded-xl transition-colors"
-                >
+                <button onClick={downloadICS} className="inline-flex items-center gap-2 bg-white hover:bg-stone-50 border border-stone-200 text-stone-900 text-sm font-semibold px-5 py-3 rounded-xl transition-colors">
                   <CalendarPlus size={16} /> Add to calendar
                 </button>
+                
                 {isOwner && (
                   <>
-                    <Link
-                      to={`/events/${event._id}/edit`}
-                      className="inline-flex items-center gap-2 bg-stone-100 hover:bg-stone-200 text-stone-900 text-sm font-semibold px-4 py-3 rounded-xl transition-colors"
-                    >
+                    <Link to={`/events/${event._id}/edit`} className="inline-flex items-center gap-2 bg-stone-100 hover:bg-stone-200 text-stone-900 text-sm font-semibold px-4 py-3 rounded-xl transition-colors">
                       <Pencil size={16} /> Edit
                     </Link>
-                    <button
-                      onClick={() => setConfirmDelete(true)}
-                      className="inline-flex items-center gap-2 bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 text-sm font-semibold px-4 py-3 rounded-xl transition-colors"
+                    
+                    {/* FIX: Use query params instead of navigate state */}
+                    <Link
+                      to={`/spotlight/claim?targetType=event&targetId=${event._id}`}
+                      className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-sm font-semibold px-4 py-3 rounded-xl transition-all shadow-[0_4px_20px_-4px_rgba(139,92,246,0.5)]"
                     >
+                      <Sparkles size={16} /> Spotlight Event
+                    </Link>
+
+                    <button onClick={() => setConfirmDelete(true)} className="inline-flex items-center gap-2 bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 text-sm font-semibold px-4 py-3 rounded-xl transition-colors">
                       <Trash2 size={16} /> Delete
                     </button>
                   </>
@@ -289,26 +258,16 @@ export default function EventDetail() {
               </div>
             </div>
 
-            {/* Team Requests Section */}
             <div>
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h2 className="text-lg font-serif font-bold text-stone-900 flex items-center gap-2">
                     <UsersIcon size={18} className="text-indigo-600" /> Looking for teammates
-                    {teamRequests.length > 0 && (
-                      <span className="text-xs font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full">
-                        {teamRequests.length}
-                      </span>
-                    )}
+                    {teamRequests.length > 0 && <span className="text-xs font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full">{teamRequests.length}</span>}
                   </h2>
-                  <p className="text-xs text-stone-500 mt-1">
-                    Join an existing team or post your own
-                  </p>
+                  <p className="text-xs text-stone-500 mt-1">Join an existing team or post your own</p>
                 </div>
-                <Link
-                  to={`/events/${event._id}/team/new`}
-                  className="shrink-0 inline-flex items-center gap-1.5 text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg transition-colors"
-                >
+                <Link to={`/events/${event._id}/team/new`} className="shrink-0 inline-flex items-center gap-1.5 text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg transition-colors">
                   + Post a request
                 </Link>
               </div>
@@ -316,24 +275,16 @@ export default function EventDetail() {
               {teamRequests.length === 0 ? (
                 <div className="bg-stone-50 border border-dashed border-stone-300 rounded-2xl p-6 text-center">
                   <p className="text-sm text-stone-600 mb-3">No team requests yet.</p>
-                  <Link
-                    to={`/events/${event._id}/team/new`}
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-700 hover:text-indigo-900"
-                  >
-                    Be the first to post one →
-                  </Link>
+                  <Link to={`/events/${event._id}/team/new`} className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-700 hover:text-indigo-900">Be the first to post one →</Link>
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {teamRequests.map((tr, i) => (
-                    <TeamRequestCard key={tr._id} tr={tr} index={i} />
-                  ))}
+                  {teamRequests.map((tr, i) => <TeamRequestCard key={tr._id} tr={tr} index={i} />)}
                 </div>
               )}
             </div>
           </motion.div>
 
-          {/* Right column */}
           <aside className="space-y-5 lg:sticky lg:top-32 self-start">
             <div className="bg-white border border-stone-200 rounded-2xl p-5">
               <p className="text-[10px] tracking-[0.3em] uppercase font-semibold text-stone-400 mb-4 inline-flex items-center gap-2">
@@ -342,18 +293,9 @@ export default function EventDetail() {
               <div className="flex items-center gap-3 mb-5">
                 <div className="flex -space-x-2">
                   {event.rsvps?.slice(0, 4).map((r, i) => (
-                    <div
-                      key={i}
-                      className="w-9 h-9 rounded-full bg-orange-500 border-2 border-white grid place-items-center text-white text-xs font-bold"
-                    >
-                      {r.userId?.name?.[0]?.toUpperCase() || "?"}
-                    </div>
+                    <div key={i} className="w-9 h-9 rounded-full bg-orange-500 border-2 border-white grid place-items-center text-white text-xs font-bold">{r.userId?.name?.[0]?.toUpperCase() || "?"}</div>
                   ))}
-                  {goingCount > 4 && (
-                    <div className="w-9 h-9 rounded-full bg-stone-100 border-2 border-white grid place-items-center text-stone-500 text-[10px] font-bold">
-                      +{goingCount - 4}
-                    </div>
-                  )}
+                  {goingCount > 4 && <div className="w-9 h-9 rounded-full bg-stone-100 border-2 border-white grid place-items-center text-stone-500 text-[10px] font-bold">+{goingCount - 4}</div>}
                 </div>
                 <div>
                   <div className="text-stone-900 font-bold">{goingCount} going</div>
@@ -363,75 +305,31 @@ export default function EventDetail() {
 
               {user ? (
                 <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={() => handleRSVP("going")}
-                    disabled={busy}
-                    className={`text-xs font-semibold py-3 rounded-xl transition-all ${
-                      rsvp === "going"
-                        ? "bg-emerald-600 text-white shadow-[0_2px_8px_-2px_rgba(5,150,105,0.4)]"
-                        : "bg-stone-100 text-stone-700 hover:bg-stone-200"
-                    }`}
-                  >
-                    {rsvp === "going" ? (
-                      <><Check size={12} className="inline mr-1" /> Going</>
-                    ) : (
-                      "Going"
-                    )}
+                  <button onClick={() => handleRSVP("going")} disabled={busy} className={`text-xs font-semibold py-3 rounded-xl transition-all ${rsvp === "going" ? "bg-emerald-600 text-white shadow-[0_2px_8px_-2px_rgba(5,150,105,0.4)]" : "bg-stone-100 text-stone-700 hover:bg-stone-200"}`}>
+                    {rsvp === "going" ? <><Check size={12} className="inline mr-1" /> Going</> : "Going"}
                   </button>
-                  <button
-                    onClick={() => handleRSVP("interested")}
-                    disabled={busy}
-                    className={`text-xs font-semibold py-3 rounded-xl transition-all ${
-                      rsvp === "interested"
-                        ? "bg-orange-600 text-white shadow-[0_2px_8px_-2px_rgba(234,88,12,0.4)]"
-                        : "bg-stone-100 text-stone-700 hover:bg-stone-200"
-                    }`}
-                  >
-                    {rsvp === "interested" ? (
-                      <><Check size={12} className="inline mr-1" /> Interested</>
-                    ) : (
-                      "Interested"
-                    )}
+                  <button onClick={() => handleRSVP("interested")} disabled={busy} className={`text-xs font-semibold py-3 rounded-xl transition-all ${rsvp === "interested" ? "bg-orange-600 text-white shadow-[0_2px_8px_-2px_rgba(234,88,12,0.4)]" : "bg-stone-100 text-stone-700 hover:bg-stone-200"}`}>
+                    {rsvp === "interested" ? <><Check size={12} className="inline mr-1" /> Interested</> : "Interested"}
                   </button>
                 </div>
               ) : (
-                <Link
-                  to="/auth"
-                  className="block text-center text-xs font-semibold py-3 bg-stone-900 text-white rounded-xl hover:bg-stone-800 transition-colors"
-                >
-                  Log in to RSVP
-                </Link>
+                <Link to="/auth" className="block text-center text-xs font-semibold py-3 bg-stone-900 text-white rounded-xl hover:bg-stone-800 transition-colors">Log in to RSVP</Link>
               )}
             </div>
 
             {related.length > 0 && (
               <div>
-                <p className="text-[10px] tracking-[0.3em] uppercase font-semibold text-stone-400 mb-3">
-                  Explore other events
-                </p>
+                <p className="text-[10px] tracking-[0.3em] uppercase font-semibold text-stone-400 mb-3">Explore other events</p>
                 <div className="space-y-3">
                   {related.map((e) => (
-                    <Link
-                      key={e._id}
-                      to={`/events/${e._id}`}
-                      className="group block bg-white border border-stone-200 hover:border-stone-300 rounded-xl p-3 transition-colors"
-                    >
+                    <Link key={e._id} to={`/events/${e._id}`} className="group block bg-white border border-stone-200 hover:border-stone-300 rounded-xl p-3 transition-colors">
                       <div className="flex gap-3">
-                        {e.coverImage && (
-                          <img src={e.coverImage} alt="" className="w-16 h-16 object-cover rounded-lg shrink-0" />
-                        )}
+                        {e.coverImage && <img src={e.coverImage} alt="" className="w-16 h-16 object-cover rounded-lg shrink-0" />}
                         <div className="min-w-0 flex-1">
-                          <div className="text-sm font-semibold text-stone-900 line-clamp-2 mb-1 group-hover:text-orange-700 transition-colors">
-                            {e.title}
-                          </div>
-                          <div className="text-[10px] text-stone-400">
-                            {new Date(e.date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
-                          </div>
+                          <div className="text-sm font-semibold text-stone-900 line-clamp-2 mb-1 group-hover:text-orange-700 transition-colors">{e.title}</div>
+                          <div className="text-[10px] text-stone-400">{new Date(e.date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</div>
                         </div>
-                        <ArrowUpRight
-                          size={14}
-                          className="text-stone-400 group-hover:text-orange-600 shrink-0 transition-colors"
-                        />
+                        <ArrowUpRight size={14} className="text-stone-400 group-hover:text-orange-600 shrink-0 transition-colors" />
                       </div>
                     </Link>
                   ))}
@@ -443,38 +341,14 @@ export default function EventDetail() {
       </div>
 
       {confirmDelete && (
-        <div
-          className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm grid place-items-center px-4"
-          onClick={() => !deleting && setConfirmDelete(false)}
-        >
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl"
-          >
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-red-50 border border-red-200 mb-4">
-              <Trash2 size={22} className="text-red-500" />
-            </div>
+        <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm grid place-items-center px-4" onClick={() => !deleting && setConfirmDelete(false)}>
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} onClick={(e) => e.stopPropagation()} className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-red-50 border border-red-200 mb-4"><Trash2 size={22} className="text-red-500" /></div>
             <h3 className="text-lg font-bold text-stone-900 mb-2">Delete this event?</h3>
-            <p className="text-sm text-stone-500 mb-6">
-              All RSVPs and details will be removed. This cannot be undone.
-            </p>
+            <p className="text-sm text-stone-500 mb-6">All RSVPs and details will be removed. This cannot be undone.</p>
             <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => setConfirmDelete(false)}
-                disabled={deleting}
-                className="px-4 py-2 text-sm font-semibold text-stone-500 hover:text-stone-900"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDelete}
-                disabled={deleting}
-                className="bg-red-600 hover:bg-red-500 text-white text-sm font-semibold px-5 py-2.5 rounded-lg disabled:opacity-50"
-              >
-                {deleting ? "Deleting…" : "Delete"}
-              </button>
+              <button onClick={() => setConfirmDelete(false)} disabled={deleting} className="px-4 py-2 text-sm font-semibold text-stone-500 hover:text-stone-900">Cancel</button>
+              <button onClick={handleDelete} disabled={deleting} className="bg-red-600 hover:bg-red-500 text-white text-sm font-semibold px-5 py-2.5 rounded-lg disabled:opacity-50">{deleting ? "Deleting…" : "Delete"}</button>
             </div>
           </motion.div>
         </div>

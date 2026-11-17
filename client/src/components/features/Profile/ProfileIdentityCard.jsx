@@ -1,26 +1,46 @@
 // client/src/components/features/Profile/ProfileIdentityCard.jsx
-import { Link } from "react-router-dom";
-import { FiMessageCircle, FiLoader, FiEdit3 } from "react-icons/fi";
-import { Sparkles, ShieldCheck, GraduationCap } from "lucide-react";
+import { useState } from "react";
+import { FiMessageCircle, FiLoader, FiHeart } from "react-icons/fi";
+import { Sparkles, GraduationCap } from "lucide-react";
+import TrustRing from "./TrustRing";
+import { likeUser, unlikeUser } from "../../../services/userService";
 
 export default function ProfileIdentityCard({
-  user, spotlight, isOwn, isAdminOrMod, mutual, commonGround, messaging, onMessage
+  user, spotlight, isOwn, isAdminOrMod, mutual, commonGround, messaging, onMessage,
 }) {
   const isAlumni = user.isAlumni;
   const gradYear = user.graduationYear ? String(user.graduationYear).slice(-2) : "";
   const deptShort = user.department ? user.department.substring(0, 4).toUpperCase() : "STUDENT";
-  
-  // Calculate a fake trust score visual width if the actual trust score is low
-  const displayTrust = user.trustScore || 0;
+
+  const [liked, setLiked] = useState(user.isLikedByMe || false);
+  const [likesCount, setLikesCount] = useState(user.likesCount || 0);
+  const [liking, setLiking] = useState(false);
+
+  const handleLike = async () => {
+    if (liking || isOwn) return;
+    setLiking(true);
+    try {
+      if (liked) {
+        await unlikeUser(user._id);
+        setLikesCount((n) => Math.max(0, n - 1));
+        setLiked(false);
+      } else {
+        await likeUser(user._id);
+        setLikesCount((n) => n + 1);
+        setLiked(true);
+      }
+    } catch {
+      /* silent */
+    } finally {
+      setLiking(false);
+    }
+  };
 
   return (
     <div className="w-full flex flex-col gap-4">
-      
-      {/* 🌟 THE BUDDY PASS (Inspired by Landing Page) 🌟 */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#26226b] to-[#0c0b18] border border-indigo-400/40 shadow-xl text-white">
-        
-        {/* Top Bar */}
-        <div className="flex items-center justify-between p-5 pb-3 border-b border-white/10">
+      {/* THE BUDDY PASS CARD */}
+      <div className="relative overflow-hidden rounded-3xl bg-[#14121f] border border-indigo-500/30 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5)] text-white">
+        <div className="flex items-center justify-between p-5 pb-3 border-b border-white/10 bg-gradient-to-r from-[#26226b]/50 to-transparent">
           <span className="flex items-center gap-2 text-[10px] font-bold tracking-[0.2em]">
             <span className="grid place-items-center w-6 h-6 rounded-md bg-white text-[#1e1b4b] text-[12px] font-serif font-black">C</span>
             BUDDY PASS
@@ -30,115 +50,106 @@ export default function ProfileIdentityCard({
           </small>
         </div>
 
-        {/* Identity */}
-        <div className="p-5 flex items-center gap-4">
-          <div className="relative">
+        <div className="p-6 pb-4 flex items-start gap-5">
+          <div className="relative shrink-0">
             {user.avatar ? (
-              <img src={user.avatar} alt={user.name} className="w-16 h-16 rounded-xl object-cover border-2 border-indigo-400/50 shadow-lg" />
+              <img src={user.avatar} alt={user.name} className="w-20 h-20 rounded-2xl object-cover border-2 border-indigo-400/50 shadow-lg" />
             ) : (
-              <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 grid place-items-center text-2xl shadow-lg border border-indigo-400/50">
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 grid place-items-center text-3xl shadow-lg border border-indigo-400/50">
                 🎓
               </div>
             )}
-            {/* Spotlight indicator */}
             {spotlight?.active && (
-              <div className="absolute -bottom-1.5 -right-1.5 bg-purple-500 p-1 rounded-md border border-[#0c0b18] shadow-sm" title="Spotlighted">
-                <Sparkles size={10} className="text-white fill-white" />
+              <div className="absolute -bottom-2 -right-2 bg-gradient-to-r from-amber-400 to-orange-500 p-1.5 rounded-lg border-2 border-[#14121f] shadow-lg" title="Spotlighted">
+                <Sparkles size={12} className="text-white fill-white" />
               </div>
             )}
           </div>
-          <div>
-            <h1 className="text-xl font-serif font-bold leading-tight">{user.name}</h1>
-            <p className="text-[11px] text-indigo-300/80 mt-1">
-              @{user.name.split(' ')[0].toLowerCase()} • {deptShort} '{gradYear}
+          <div className="min-w-0 pt-1 flex-1">
+            <h1 className="text-2xl font-serif font-bold leading-tight truncate">{user.name}</h1>
+            <p className="text-xs text-indigo-300/80 mt-1 flex items-center gap-1.5">
+              <span className="w-1 h-1 rounded-full bg-indigo-400" />
+              @{user.name.split(" ")[0].toLowerCase()} • {deptShort} '{gradYear}
             </p>
+            {user.university && (
+              <p className="text-[10px] text-gray-400 mt-2 flex items-center gap-1">
+                {user.university} Node
+              </p>
+            )}
           </div>
         </div>
 
-        {/* Stats Grid */}
-        <div className="px-5 pb-5 grid grid-cols-2 gap-2">
-          {/* Trust Score */}
-          <div className="col-span-2 bg-white/5 border border-white/10 rounded-xl p-3 flex flex-col justify-between">
-            <div className="flex items-baseline justify-between mb-2">
-              <div className="flex items-baseline gap-2">
-                <b className="text-2xl text-orange-400 leading-none">{displayTrust}</b>
-                <span className="text-[9px] text-gray-300 uppercase tracking-widest font-bold">Trust score</span>
-              </div>
-              <ShieldCheck size={14} className="text-emerald-400" />
+        {/* Stats row: trust ring + role + status */}
+        <div className="px-6 pb-6 grid grid-cols-[auto_1fr] gap-4 items-center">
+          <TrustRing score={user.trustScore || 0} size={108} dark />
+          <div className="space-y-2">
+            <div className="bg-white/5 border border-white/10 rounded-xl p-3">
+              <span className="text-[9px] text-gray-400 uppercase tracking-widest font-bold mb-1 block">Role</span>
+              <span className="text-white text-xs font-semibold capitalize flex items-center gap-1.5">
+                <GraduationCap size={14} className="text-indigo-400" /> {user.role}
+              </span>
             </div>
-            <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
-              <div 
-                className="h-full rounded-full bg-gradient-to-r from-orange-400 to-amber-300 transition-all duration-1000" 
-                style={{ width: `${Math.min(displayTrust, 100)}%` }} 
-              />
+            <div className="bg-white/5 border border-white/10 rounded-xl p-3">
+              <span className="text-[9px] text-gray-400 uppercase tracking-widest font-bold mb-1 block">Status</span>
+              <span className="text-white text-xs font-semibold flex items-center gap-1.5">
+                {isAdminOrMod ? (user.role === "admin" ? "Admin" : "Moderator") : (isAlumni ? "Alumni" : "Student")}
+              </span>
             </div>
-          </div>
-          
-          {/* Role / Status */}
-          <div className="bg-white/5 border border-white/10 rounded-xl p-3 flex flex-col justify-center">
-            <span className="text-[9px] text-gray-400 uppercase tracking-widest font-bold">Role</span>
-            <span className="text-white text-xs font-semibold capitalize mt-1 flex items-center gap-1.5">
-              <GraduationCap size={12} className="text-indigo-400" /> {user.role}
-            </span>
-          </div>
-
-          {/* University */}
-          <div className="bg-white/5 border border-white/10 rounded-xl p-3 flex flex-col justify-center">
-            <span className="text-[9px] text-gray-400 uppercase tracking-widest font-bold">Campus</span>
-            <span className="text-white text-xs font-semibold mt-1">{user.university || "N/A"}</span>
           </div>
         </div>
+
+        {/* Action row */}
+        {!isOwn && (
+          <div className="px-6 pb-6 flex gap-2">
+            <button
+              onClick={onMessage}
+              disabled={messaging}
+              className="flex-1 inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-sm font-bold px-4 py-3 rounded-xl transition-all"
+            >
+              {messaging ? <><FiLoader size={14} className="animate-spin" /> Opening…</> : <><FiMessageCircle size={14} /> Message</>}
+            </button>
+            <button
+              onClick={handleLike}
+              disabled={liking}
+              className={`inline-flex items-center justify-center gap-1.5 text-sm font-bold px-4 py-3 rounded-xl transition-all ${
+                liked
+                  ? "bg-rose-500/20 text-rose-300 border border-rose-500/40"
+                  : "bg-white/5 text-gray-300 border border-white/10 hover:bg-rose-500/10 hover:text-rose-300"
+              }`}
+            >
+              <FiHeart size={14} fill={liked ? "currentColor" : "none"} />
+              {likesCount > 0 && likesCount}
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* 🌟 COMMON GROUND (Recommendation Engine) 🌟 */}
-      {!isOwn && commonGround?.reasons?.length > 0 && (
-        <div className="bg-white border border-stone-200 rounded-2xl p-4 shadow-sm">
-          <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-indigo-700 mb-3">
-            <Sparkles size={14} className="text-indigo-500" /> Why you should connect
-          </div>
-          <div className="space-y-2">
-            {commonGround.reasons.map((reason, idx) => (
-              <div key={idx} className="flex items-start gap-2 text-xs text-stone-700 font-medium">
-                <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-indigo-400 shrink-0" />
-                {reason}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Actions & Info */}
+      {/* Common ground, bio, mutual — unchanged from before */}
       <div className="bg-white border border-stone-200 rounded-2xl p-5 shadow-sm flex flex-col gap-4">
-        
-        {/* Bio */}
+        {!isOwn && commonGround?.reasons?.length > 0 && (
+          <div className="bg-indigo-50/50 border border-indigo-100 rounded-xl p-4">
+            <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-indigo-700 mb-3">
+              <Sparkles size={14} className="text-indigo-500" /> Why you should connect
+            </div>
+            <div className="space-y-2">
+              {commonGround.reasons.map((reason, idx) => (
+                <div key={idx} className="flex items-start gap-2 text-xs text-indigo-900 font-medium">
+                  <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-indigo-400 shrink-0" />
+                  {reason}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {user.bio && (
           <div>
             <p className="text-sm text-stone-600 leading-relaxed italic">"{user.bio}"</p>
           </div>
         )}
 
-        {/* Action Buttons */}
-        {!isOwn ? (
-          <button
-            onClick={onMessage}
-            disabled={messaging}
-            className="w-full flex items-center justify-center gap-2 bg-stone-900 hover:bg-stone-800 text-white text-sm font-semibold py-3 rounded-xl transition-all shadow-sm disabled:opacity-50"
-          >
-            {messaging ? <FiLoader size={16} className="animate-spin" /> : <FiMessageCircle size={16} />}
-            Message
-          </button>
-        ) : (
-          <Link
-            to="/profile/edit"
-            className="w-full flex items-center justify-center gap-2 bg-stone-100 hover:bg-stone-200 border border-stone-200 text-stone-800 text-sm font-semibold py-3 rounded-xl transition-all shadow-sm"
-          >
-            <FiEdit3 size={16} /> Edit profile
-          </Link>
-        )}
-
-        {/* Mutual Connections */}
         {mutual && mutual.length > 0 && (
-          <div className="pt-4 border-t border-stone-100">
+          <div className="pt-2">
             <div className="text-[10px] uppercase tracking-widest text-stone-400 font-semibold mb-2">You both know</div>
             <div className="flex items-center gap-2">
               <div className="flex -space-x-2">
@@ -149,7 +160,7 @@ export default function ProfileIdentityCard({
                 ))}
               </div>
               <span className="text-xs text-stone-500 font-medium">
-                {mutual.length} mutual {mutual.length === 1 ? 'connection' : 'connections'}
+                {mutual.length} mutual {mutual.length === 1 ? "connection" : "connections"}
               </span>
             </div>
           </div>

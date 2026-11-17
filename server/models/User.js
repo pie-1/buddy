@@ -1,4 +1,3 @@
-// server/models/User.js
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 
@@ -16,12 +15,10 @@ const userSchema = new mongoose.Schema(
     university: { type: String, enum: ["TU", "PU", "PoU", "Admin"], required: true },
     graduationYear: {
       type: Number,
-      // Only required for students
       required: function () { return this.role === "student"; },
       min: [2010, "Graduation year must be 2010 or later"],
       max: [2035, "Graduation year must be 2035 or earlier"],
       validate: {
-        // Skip validation if the year is null (admin/moderator)
         validator: function (v) {
           if (v === null || v === undefined) return true;
           return Number.isInteger(v);
@@ -53,6 +50,10 @@ const userSchema = new mongoose.Schema(
 
     otp: String,
     otpExpires: Date,
+
+    likesReceived: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    likesGiven:    [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    profileBonusAwarded: { type: Boolean, default: false },
   },
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );

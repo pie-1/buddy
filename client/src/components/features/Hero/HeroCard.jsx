@@ -1,4 +1,3 @@
-// client/src/components/features/Hero/HeroCard.jsx
 import { motion } from "framer-motion";
 import { STUDENT as S } from "./studentData";
 
@@ -42,7 +41,6 @@ export function HeroCard({ cardRef, passRef, scale, y, hintOpacity }) {
           <span className="w-2 h-2 rounded-full bg-stone-400" />
         </div>
 
-        {/* FRONT: Paper ID — warm light gray-orange blend */}
         <div className="absolute inset-0 rounded-2xl overflow-hidden bg-gradient-to-br from-[#f7f3ee] via-[#f5f0e8] to-[#f0e8dd] border border-[#d8cfc2] shadow-[0_30px_60px_-15px_rgba(120,80,40,0.15)] flex flex-col z-10 p-4 md:p-6">
           
           <div className="text-center pb-3 md:pb-4 border-b border-stone-300/50">
@@ -80,7 +78,7 @@ export function HeroCard({ cardRef, passRef, scale, y, hintOpacity }) {
           </div>
 
           <div className="mt-auto mb-3 md:mb-4 px-2 py-1 md:py-1.5 text-[7px] md:text-[8px] text-center text-red-700 bg-red-50 border border-red-200 border-dashed rounded font-bold uppercase tracking-wider">
-            ⚠ Library Dues Pending: Rs. 150
+            ⚠ Keep This Card With You
           </div>
 
           <div className="mt-auto flex flex-col items-center justify-center">
@@ -89,7 +87,6 @@ export function HeroCard({ cardRef, passRef, scale, y, hintOpacity }) {
           </div>
         </div>
 
-        {/* BACK: Digital Buddy Pass — unchanged */}
         <div
           ref={passRef}
           style={{ clipPath: "circle(0px at 0 0)" }}
@@ -141,7 +138,7 @@ export function HeroCard({ cardRef, passRef, scale, y, hintOpacity }) {
             
             <div className="col-span-2 bg-white/5 border border-white/10 rounded-xl p-2 md:p-3 flex items-center justify-between">
               <div>
-                <span className="block text-[8px] md:text-[9px] text-gray-400 uppercase tracking-widest font-bold mb-0.5 md:mb-1">📅 Tonight</span>
+                <span className="block text-[8px] md:text-[9px] text-gray-400 uppercase tracking-widest font-bold mb-0.5 md:mb-1">📅 Hack Event</span>
                 <span className="text-white text-xs md:text-sm font-semibold">ACIT Hackathon</span>
               </div>
               <span className="text-[8px] md:text-[9px] font-bold text-emerald-300 bg-emerald-400/10 border border-emerald-400/30 rounded-full px-1.5 py-0.5 md:px-2 md:py-1">TEAM FOUND</span>

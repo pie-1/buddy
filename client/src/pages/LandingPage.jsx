@@ -13,9 +13,9 @@ import { HangingNumber } from "../components/features/Landing/HangingNumber";
 const WAVE = "M0,160L48,170.7C96,181,192,203,288,197.3C384,192,480,160,576,165.3C672,171,768,213,864,213.3C960,213,1056,171,1152,149.3C1248,128,1344,128,1392,128L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z";
 
 const CHAT = [
-  { me: false, text: "Did anyone know about the hackathon happening today? 🥲" },
+  { me: false, text: "Does anyone know about the hackathon happening this month? 🥲" },
   { me: true, text: "No! I found out on Instagram. It already ended." },
-  { me: false, text: "Need 1 coder for the inter-college futsal team. Anyone?" },
+  { me: false, text: "Need 1 coder for the inter-college cyber war competition. Anyone?" },
   { me: false, text: "[ No replies ]" },
 ];
 
@@ -67,15 +67,16 @@ export default function LandingPage() {
             <div className="relative z-10">
               <HangingNumber num="01" color="text-white" />
               <h3 className="text-5xl md:text-7xl font-serif font-bold leading-[1.05] tracking-tight relative z-10">
-                <MaskLine>“Did you</MaskLine>
-                <MaskLine delay={0.08}>know?”</MaskLine>
-                <MaskLine delay={0.3} className="text-gray-500 mt-3">“Can</MaskLine>
-                <MaskLine delay={0.38} className="text-gray-500">someone?”</MaskLine>
-                <MaskLine delay={0.6} className="text-red-500 italic mt-3">“No reply.”</MaskLine>
+                <MaskLine>“Wait, what?"</MaskLine>
+                <MaskLine delay={0.08}>“Registration</MaskLine>
+                <MaskLine delay={0.3} className="text-gray-500 mt-3">Ended”</MaskLine>
+                <MaskLine delay={0.38} className="text-gray-500">“for the</MaskLine>
+                <MaskLine delay={0.6} className="text-red-500 italic mt-3">Event?”</MaskLine>
               </h3>
               <Reveal as="p" delay={0.8} className="text-gray-400 mt-8 max-w-md relative z-10 text-lg leading-relaxed">
-                Hackathons announced in a group you muted. A futsal team that doesn't know you play.
-                A senior you'd message if you knew how to start.
+                A hackathon you would've joined. A college event you would've loved.
+                Announced on Facebook, buried in your feed, and over before you even knew.
+       
               </Reveal>
             </div>
 

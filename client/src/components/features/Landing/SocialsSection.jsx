@@ -1,4 +1,3 @@
-// client/src/components/features/Landing/SocialsSection.jsx
 import { useContext, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, useInView, useMotionValue, useSpring, useTransform, useReducedMotion } from "framer-motion";
@@ -122,7 +121,7 @@ export default function SocialsSection({ topColor = "#09090b" }) {
         <div className="max-w-6xl mx-auto px-6 text-center relative z-10">
           <Reveal as="p" className="text-indigo-600 text-[11px] tracking-[0.4em] uppercase font-bold mb-4">Live on campus</Reveal>
           <h2 className="text-4xl md:text-6xl font-sans font-black tracking-tighter text-[#1a1a2e] leading-none mb-3">
-            <MaskLine>A NORMAL TUESDAY</MaskLine>
+            <MaskLine>A NORMAL Things</MaskLine>
             <MaskLine delay={0.1}><span className="text-indigo-600">ON COLLEGEBUDDY</span></MaskLine>
           </h2>
           <Reveal as="p" delay={0.2} className="text-gray-500 mb-14 md:mb-24 max-w-md mx-auto">

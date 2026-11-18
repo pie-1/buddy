@@ -1,4 +1,3 @@
-// client/src/components/features/Landing/TrustFlow.jsx
 import { useEffect, useRef, useState } from "react";
 import { motion, useScroll, useSpring, useTransform, useMotionValueEvent, useReducedMotion } from "framer-motion";
 import { IdFace, PassFace } from "../../ui/CardFaces";
@@ -9,16 +8,16 @@ const MARQUEE_2 = "REAL PEOPLE • JUST YOUR CAMPUS • TRUSTED • ";
 const FIXES = [
   { 
     id: "01", 
-    title: "Rent Items", 
+    title: "Sell & Rent Items", 
     desc: "Need some items for just some days? Rent it from a verified college seniors or juniors.", 
     icon: "📐", 
     color: "text-red-400" 
   },
   { 
     id: "02", 
-    title: "Past Papers & Notes", 
-    desc: "Stop digging through group chats. Find past papers, lab manuals, and study guides shared by verified seniors.", 
-    icon: "📚", 
+    title: "Events", 
+    desc: "No need to scroll social media platform for events.", 
+    icon: "📡", 
     color: "text-cyan-400" 
   },
   { 

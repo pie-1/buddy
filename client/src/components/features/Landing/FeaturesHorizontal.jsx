@@ -1,4 +1,3 @@
-// client/src/components/features/Landing/FeaturesHorizontal.jsx
 import { useLayoutEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -15,7 +14,6 @@ import {
 const EASE = [0.22, 1, 0.36, 1];
 const clamp01 = (v) => Math.min(1, Math.max(0, v));
 
-// `peek` is a tiny real-life sample of what you will find inside, so each card shows instead of only telling.
 const FEATURES = [
   {
     id: "01",
@@ -24,11 +22,11 @@ const FEATURES = [
     dot: "bg-indigo-400",
     tagColor: "text-indigo-300 border-indigo-400/30 bg-indigo-400/10",
     glow: "99,102,241",
-    title: "Don't buy new. Borrow smart.",
-    desc: "Need a drafter for just one semester? Rent it from a senior. Sell last year's books. Your money stays safe until you both say “done”.",
+    title: "Don't buy new. Buy smart.",
+    desc: "Need a drafter for just one semester? Buy it from a senior. Sell last year's books.",
     icon: "🛍️",
-    peek: "📐 Drafter set · Rs. 150 / semester",
-    tags: ["Escrow protected", "Verified students"],
+    peek: "📐 Drafter set · Rs. 150 ",
+    tags: ["protected", "Verified students"],
     cta: "Browse the marketplace",
   },
   {
@@ -81,7 +79,7 @@ const FEATURES = [
     tagColor: "text-amber-300 border-amber-400/30 bg-amber-400/10",
     glow: "251,191,36",
     title: "Be the first thing they see.",
-    desc: "Selling a ticket? Need a teammate fast? Get to the top of every feed for a week with a Spotlight pass.",
+    desc: "Selling a Events/Workshops? Need a teammate fast? Get to the top of every feed for a week with a Spotlight pass.",
     icon: "⭐",
     peek: "✨ Top of every feed · 7 days",
     tags: ["Top placement", "7 days"],
@@ -105,11 +103,6 @@ function Header({ hint }) {
   );
 }
 
-/*
-  One feature card. In the pinned version it also reacts to where it sits on screen:
-  the card nearest the middle is full size and bright, the others sit back slightly, and the big
-  number drifts a little against the scroll for depth. All of it runs on motion values, with no re-renders.
-*/
 function FeatureCard({ f, x, innerRef }) {
   const wrap = useRef(null);
   const centre = useRef(0);
@@ -128,7 +121,6 @@ function FeatureCard({ f, x, innerRef }) {
     return () => ro.disconnect();
   }, [innerRef]);
 
-  // signed distance from the viewport centre, in viewport widths
   const dist = useTransform(src, (v) => (live ? (centre.current + v - window.innerWidth / 2) / window.innerWidth : 0));
   const focus = useTransform(dist, (d) => clamp01(1 - Math.abs(d) / 0.62));
   const scale = useTransform(focus, [0, 1], [0.96, 1]);
@@ -149,7 +141,6 @@ function FeatureCard({ f, x, innerRef }) {
         style={{ "--glow": f.glow }}
         className="group relative flex h-[490px] md:h-[470px] flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#14121f] p-8 shadow-2xl transition-all duration-300 hover:-translate-y-2 hover:border-white/25 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-400 [@media(max-height:800px)]:h-[440px] [@media(max-height:800px)]:p-7"
       >
-        {/* a soft light that follows the pointer, tinted to the card's colour */}
         <div aria-hidden className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100" style={{ background: "radial-gradient(300px circle at var(--mx,50%) var(--my,0%), rgba(var(--glow),.16), transparent 65%)" }} />
         <motion.div aria-hidden style={live ? { x: numX } : undefined} className="pointer-events-none absolute right-6 top-4 select-none font-serif text-[120px] font-black leading-none text-white/[0.04] transition-transform duration-500 group-hover:scale-110">
           {f.id}
@@ -216,7 +207,6 @@ function Pinned() {
   const progress = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
   const x = useTransform(progress, (p) => -p * shift);
 
-  // which card is closest to the left edge of the viewport right now (drives the step dots)
   useMotionValueEvent(progress, "change", (p) => {
     const first = cards.current[0]?.offsetLeft ?? 0;
     const pos = p * shift;
@@ -266,7 +256,6 @@ function Pinned() {
           {FEATURES.map((f, i) => <FeatureCard key={f.id} f={f} x={x} innerRef={setCard(i)} />)}
         </motion.div>
 
-        {/* progress + step dots. Click a dot to jump to that card. */}
         <div className="relative z-10 mx-auto mt-7 w-full max-w-6xl px-6 [@media(max-height:800px)]:mt-5">
           <div className="h-[3px] overflow-hidden rounded-full bg-black/10">
             <motion.div style={{ scaleX: progress }} className="h-full origin-left bg-gradient-to-r from-indigo-500 to-orange-400" />

@@ -3,7 +3,7 @@
 # 🎓 CollegeBuddy
 
 **The verified campus network for Nepali universities.**
-Buy, sell, rent, find roommates, join events, build teams, and connect — all from one place.
+Buy, sell, rent, find roommates, join events and Workshops, build teams, and connect - all from one place.
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
@@ -60,8 +60,8 @@ The project is a **MERN stack application** (MongoDB, Express, React, Node.js) b
 - Report and block from any thread
 
 ### ⭐ Spotlight
-- Weekly top-3 profile promotion
-- Paid placement via eSewa (Rs. 100/week)
+- Weekly top-3 Profile and Event gets spotlight
+- Paid spotlight placement (Rs. 50/week)
 - Admin-verified payment proofs
 - Automatic fallback to high-activity students when slots are unfilled
 
@@ -323,7 +323,7 @@ This project is licensed under the **MIT License** — see [LICENSE](LICENSE) fo
 
 <div align="center">
 
-**Built with ❤️ by students, for students.**
+**Built with ❤️, for all students like me.**
 
 If this project helped you, give it a ⭐ on GitHub — it means a lot.
 

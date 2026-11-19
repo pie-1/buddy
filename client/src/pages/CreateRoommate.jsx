@@ -109,7 +109,7 @@ export default function CreateRoommate() {
                 className={`text-left p-4 rounded-xl border transition-all ${kind === "looking-for-room" ? "bg-indigo-500/10 border-indigo-500/50 shadow-[0_0_20px_rgba(79,70,229,0.2)]" : "bg-white/[0.03] border-white/10 hover:border-white/20"}`}
               >
                 <Search size={18} className={kind === "looking-for-room" ? "text-indigo-400 mb-2" : "text-gray-400 mb-2"} />
-                <div className="font-bold text-white mb-1">I'm looking for a room</div>
+                <div className="font-bold text-white mb-1">I'm looking for a roommate</div>
                 <div className="text-xs text-gray-400">I don't have a flat yet.</div>
               </button>
               <button

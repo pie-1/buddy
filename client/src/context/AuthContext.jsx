@@ -1,4 +1,3 @@
-// client/src/context/AuthContext.jsx
 import { createContext, useState, useEffect } from "react";
 import api from "../services/api";
 
@@ -30,7 +29,13 @@ export const AuthProvider = ({ children }) => {
       persist(data);
       return { success: true };
     } catch (error) {
-      return { success: false, message: error.response?.data?.message || "Login failed" };
+      const responseData = error.response?.data;
+      return { 
+        success: false, 
+        message: responseData?.message || "Login failed",
+        needsVerification: responseData?.needsVerification || false,
+        email: responseData?.email
+      };
     }
   };
 

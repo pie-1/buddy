@@ -1,4 +1,3 @@
-// client/src/pages/Marketplace.jsx
 import { useEffect, useState, useRef, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";

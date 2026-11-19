@@ -1,7 +1,6 @@
-// client/src/components/features/Connect/UserCard.jsx
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Star, Heart, ShieldCheck, GraduationCap, Building2 } from "lucide-react";
+import { Star, Heart, ShieldCheck, Building2 } from "lucide-react";
 import { useContext, useState } from "react";
 import { AuthContext } from "../../../context/AuthContext";
 import { likeUser, unlikeUser } from "../../../services/userService";
@@ -35,7 +34,6 @@ export default function UserCard({ user, isOwn, isSpotlighted, rank }) {
         setLiked(true);
       }
     } catch {
-      /* silent */
     } finally {
       setLiking(false);
     }
@@ -43,6 +41,8 @@ export default function UserCard({ user, isOwn, isSpotlighted, rank }) {
 
   const isAlumni = user.graduationYear && user.graduationYear <= new Date().getFullYear();
   const gradYear = user.graduationYear ? String(user.graduationYear).slice(-2) : "";
+
+  const displayUniversity = user.university === "Admin" ? "Platform Admin" : (user.university || "Verified Student");
 
   return (
     <motion.div
@@ -55,14 +55,12 @@ export default function UserCard({ user, isOwn, isSpotlighted, rank }) {
           : "shadow-[0_18px_40px_-16px_rgba(0,0,0,0.25)] hover:shadow-[0_24px_50px_-16px_rgba(0,0,0,0.35)]"
       }`}
     >
-      {/* Spotlight Rank Ribbon */}
       {isSpotlighted && (
         <div className="absolute -top-3 -right-3 z-20 bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-lg flex items-center gap-1">
           <Star size={10} fill="currentColor" /> Rank #{rank}
         </div>
       )}
 
-      {/* The ID Card Body */}
       <Link
         to={isOwn ? "/profile/edit" : `/profile/${user._id}`}
         className={`relative z-10 flex flex-col h-[440px] rounded-2xl overflow-hidden transition-all ${
@@ -71,21 +69,15 @@ export default function UserCard({ user, isOwn, isSpotlighted, rank }) {
             : "bg-gradient-to-b from-white to-[#f7f5f1] border-2 border-stone-300 hover:border-stone-400"
         }`}
       >
-        {/* University Header */}
-        <div
-          className={`text-center pt-5 pb-3 border-b mx-5 ${
-            isSpotlighted ? "border-purple-200/70" : "border-stone-200"
-          }`}
-        >
+        <div className={`text-center pt-5 pb-3 border-b mx-5 ${isSpotlighted ? "border-purple-200/70" : "border-stone-200"}`}>
           <b className="block text-[11px] tracking-[0.15em] uppercase text-stone-900 font-serif">
-            {user.university || "Purbanchal University"}
+            {displayUniversity}
           </b>
           <small className="block text-[8px] tracking-[0.2em] uppercase text-stone-500 mt-1">
             Official University Identification
           </small>
         </div>
 
-        {/* Photo */}
         <div className="mt-4 mb-4 mx-auto w-24 h-28 bg-[#efefef] rounded-md border border-stone-300 grid place-items-center overflow-hidden shrink-0 shadow-inner">
           {user.avatar ? (
             <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
@@ -96,7 +88,6 @@ export default function UserCard({ user, isOwn, isSpotlighted, rank }) {
           )}
         </div>
 
-        {/* Details */}
         <div className="flex-1 px-6 flex flex-col gap-3">
           <div>
             <Label>Name</Label>
@@ -111,7 +102,7 @@ export default function UserCard({ user, isOwn, isSpotlighted, rank }) {
               </p>
             </div>
             <div>
-              <Label>{isAlumni ? "Graduated" : "Batch"}</Label>
+              <Label>{isAlumni ? "Graduated" : "Grad Year"}</Label>
               <p className="text-[12px] text-stone-800 font-semibold truncate">
                 {gradYear ? `'${gradYear}` : "—"}
               </p>
@@ -122,11 +113,10 @@ export default function UserCard({ user, isOwn, isSpotlighted, rank }) {
             <Label>Campus</Label>
             <p className="text-[12px] text-stone-800 font-semibold truncate flex items-center gap-1">
               <Building2 size={11} className="text-stone-400 shrink-0" />
-              {user.college || `${user.university || "TU"} Node`}
+              {user.college || displayUniversity}
             </p>
           </div>
 
-          {/* Skills */}
           {user.skills?.length > 0 && (
             <div>
               <Label>Skills</Label>
@@ -148,7 +138,6 @@ export default function UserCard({ user, isOwn, isSpotlighted, rank }) {
             </div>
           )}
 
-          {/* Trust + Role row */}
           <div className="flex items-center justify-between gap-2 pt-1">
             <div className="flex items-center gap-1 text-emerald-700 font-bold text-sm">
               <ShieldCheck size={13} />
@@ -162,7 +151,6 @@ export default function UserCard({ user, isOwn, isSpotlighted, rank }) {
           </div>
         </div>
 
-        {/* Like button (for others only) */}
         {!isOwn && me && (
           <div className="px-6 pt-2">
             <button
@@ -180,7 +168,6 @@ export default function UserCard({ user, isOwn, isSpotlighted, rank }) {
           </div>
         )}
 
-        {/* Highlight banner */}
         <div
           className={`mt-3 mb-3 mx-6 px-2 py-1.5 text-[9px] text-center border-dashed rounded font-bold uppercase tracking-wider ${
             isSpotlighted
@@ -195,11 +182,10 @@ export default function UserCard({ user, isOwn, isSpotlighted, rank }) {
             : "Tap to view full Buddy Pass"}
         </div>
 
-        {/* Barcode */}
         <div className="flex flex-col items-center justify-center pb-4">
           <div className="h-6 w-36 rounded-sm bg-[repeating-linear-gradient(90deg,#78716c_0_1px,transparent_1px_3px,#78716c_3px_4px,transparent_4px_7px)] opacity-60" />
           <span className="font-mono text-[8px] text-stone-500 tracking-widest mt-1.5">
-            CB/{user.university?.slice(0, 2) || "TU"}/{user._id.slice(-4).toUpperCase()}
+            CB/{user.university?.slice(0, 2).toUpperCase() || "ID"}/{user._id.slice(-4).toUpperCase()}
           </span>
         </div>
       </Link>

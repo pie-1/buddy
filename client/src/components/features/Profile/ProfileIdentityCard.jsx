@@ -1,4 +1,3 @@
-// client/src/components/features/Profile/ProfileIdentityCard.jsx
 import { useState } from "react";
 import { FiMessageCircle, FiLoader, FiHeart } from "react-icons/fi";
 import { Sparkles, GraduationCap } from "lucide-react";
@@ -30,15 +29,15 @@ export default function ProfileIdentityCard({
         setLiked(true);
       }
     } catch {
-      /* silent */
     } finally {
       setLiking(false);
     }
   };
 
+  const displayUniversity = user.university === "Admin" ? "Platform Admin" : (user.university || "Verified Student");
+
   return (
     <div className="w-full flex flex-col gap-4">
-      {/* THE BUDDY PASS CARD */}
       <div className="relative overflow-hidden rounded-3xl bg-[#14121f] border border-indigo-500/30 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5)] text-white">
         <div className="flex items-center justify-between p-5 pb-3 border-b border-white/10 bg-gradient-to-r from-[#26226b]/50 to-transparent">
           <span className="flex items-center gap-2 text-[10px] font-bold tracking-[0.2em]">
@@ -71,15 +70,12 @@ export default function ProfileIdentityCard({
               <span className="w-1 h-1 rounded-full bg-indigo-400" />
               @{user.name.split(" ")[0].toLowerCase()} • {deptShort} '{gradYear}
             </p>
-            {user.university && (
-              <p className="text-[10px] text-gray-400 mt-2 flex items-center gap-1">
-                {user.university} Node
-              </p>
-            )}
+            <p className="text-[10px] text-gray-400 mt-2 flex items-center gap-1">
+              {displayUniversity}
+            </p>
           </div>
         </div>
 
-        {/* Stats row: trust ring + role + status */}
         <div className="px-6 pb-6 grid grid-cols-[auto_1fr] gap-4 items-center">
           <TrustRing score={user.trustScore || 0} size={108} dark />
           <div className="space-y-2">
@@ -98,7 +94,6 @@ export default function ProfileIdentityCard({
           </div>
         </div>
 
-        {/* Action row */}
         {!isOwn && (
           <div className="px-6 pb-6 flex gap-2">
             <button
@@ -124,7 +119,6 @@ export default function ProfileIdentityCard({
         )}
       </div>
 
-      {/* Common ground, bio, mutual — unchanged from before */}
       <div className="bg-white border border-stone-200 rounded-2xl p-5 shadow-sm flex flex-col gap-4">
         {!isOwn && commonGround?.reasons?.length > 0 && (
           <div className="bg-indigo-50/50 border border-indigo-100 rounded-xl p-4">

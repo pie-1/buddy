@@ -12,7 +12,7 @@ const userSchema = new mongoose.Schema(
       match: [/^\S+@\S+\.\S+$/, "Please use a valid email address"],
     },
     password: { type: String, required: true },
-    university: { type: String, enum: ["TU", "PU", "PoU", "Admin"], required: true },
+    university: { type: String, default: "" },
     graduationYear: {
       type: Number,
       required: function () { return this.role === "student"; },
@@ -52,7 +52,7 @@ const userSchema = new mongoose.Schema(
     otpExpires: Date,
 
     likesReceived: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-    likesGiven:    [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    likesGiven: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     profileBonusAwarded: { type: Boolean, default: false },
   },
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }

@@ -12,8 +12,8 @@ const container = { hidden: {}, show: { transition: { staggerChildren: 0.06 } } 
 const EASE = [0.22, 1, 0.36, 1];
 
 const MODES = [
-  { value: "have-room", label: "I'm looking for a room", icon: Search, hint: "See people who have a room" },
-  { value: "looking-for-room", label: "I have a room", icon: Home, hint: "See people looking for a room" },
+  { value: "have-room", label: "I have a room ", icon: Search, hint: "looking for roommate to share" },
+  { value: "looking-for-room", label: "I am searching roommate", icon: Home, hint: "looking for roommate" },
   { value: "", label: "Browse all", icon: null, hint: "See everyone" },
 ];
 
@@ -71,7 +71,7 @@ export default function Roommates() {
             to="/roommates/new"
             className="shrink-0 inline-flex items-center gap-2 bg-orange-600 hover:bg-orange-500 text-white text-sm font-bold px-6 py-3.5 rounded-xl transition-all shadow-[0_0_24px_rgba(249,115,22,0.35)] hover:-translate-y-0.5"
           >
-            <Plus size={16} /> Post your Room
+            <Plus size={16} /> Post for Room
           </Link>
         </motion.div>
 

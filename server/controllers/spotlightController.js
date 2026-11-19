@@ -1,7 +1,7 @@
 import SpotlightClaim from "../models/SpotlightClaim.js";
 import User from "../models/User.js";
 import Event from "../models/Event.js";
-import { awardTrust, TRUST_POINTS } from "../utils/trustScore.js";
+import { awardTrust } from "../utils/trustScore.js";
 import { currentWeekStart, nextWeekStart, weekEnd, weekLabel } from "../utils/weekUtils.js";
 
 const SLOT_COUNT = 3;
@@ -108,6 +108,20 @@ export const verifyClaim = async (req, res) => {
     const claim = await SpotlightClaim.findById(req.params.id);
     if (!claim) return res.status(404).json({ message: "Claim not found" });
     if (claim.status !== "pending") return res.status(400).json({ message: `Claim is already ${claim.status}` });
+
+    // --- SLOT LIMIT ENFORCEMENT ---
+    // Count currently active spotlights for the same week (matching the target type)
+    const activeForWeek = await SpotlightClaim.countDocuments({
+      weekStart: claim.weekStart,
+      targetType: claim.targetType,
+      status: "verified",
+    });
+
+    if (activeForWeek >= SLOT_COUNT) {
+      return res.status(400).json({ 
+        message: `All ${SLOT_COUNT} ${claim.targetType} slots for this week are already filled.` 
+      });
+    }
 
     claim.status = "verified";
     claim.reviewedBy = req.user._id;

@@ -4,7 +4,6 @@ import generateToken from "../utils/generateToken.js";
 import { sendOTPEmail } from "../utils/sendEmail.js";
 import { TRUST_POINTS } from "../utils/trustScore.js";
 
-
 const registerUser = async (req, res) => {
   const { name, email, password, graduationYear, role, adminCode } = req.body;
 
@@ -19,8 +18,8 @@ const registerUser = async (req, res) => {
       return res.status(403).json({ message: "Invalid Admin Invite Code. Access denied." });
     }
 
-    let university = "Admin";
-    let finalGradYear;
+    let university = "";
+    let finalGradYear = null;
 
     if (!isValidAdminCode) {
       const domain = email.split("@")[1].toLowerCase();
@@ -33,20 +32,18 @@ const registerUser = async (req, res) => {
         university = "PoU";
       } else {
         const approvedRequest = await CollegeRequest.findOne({ domain, status: "approved" });
-        if (approvedRequest) {
-          university = "TU";
-        } else {
-          return res.status(400).json({
-            message: "Please use a valid university email domain, or request your college domain in the footer.",
-          });
+        if (!approvedRequest) {
+          return res.status(400).json({ message: "Please use a valid university email domain, or request your college domain in the footer." });
         }
       }
 
       const currentYear = new Date().getFullYear();
       finalGradYear = Number(graduationYear);
-      if (!finalGradYear || finalGradYear < 2010 || finalGradYear > currentYear + 8) {
+      if (finalGradYear < 2010 || finalGradYear > currentYear + 8) {
         return res.status(400).json({ message: "Please enter a valid graduation year." });
       }
+    } else {
+      university = "Admin";
     }
 
     const assignedRole = isValidAdminCode ? role : "student";
@@ -55,14 +52,7 @@ const registerUser = async (req, res) => {
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
 
     const user = await User.create({
-      name,
-      email,
-      password,
-      university,
-      ...(finalGradYear !== undefined && { graduationYear: finalGradYear }),
-      role: assignedRole,
-      otp,
-      otpExpires,
+      name, email, password, university, graduationYear: finalGradYear, role: assignedRole, otp, otpExpires,
     });
 
     if (user) {
@@ -86,8 +76,24 @@ const loginUser = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (user && (await user.matchPassword(password))) {
+      // If user is not verified, resend OTP and tell frontend to show OTP screen
       if (!user.isVerified) {
-        return res.status(401).json({ message: "Please verify your email first" });
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        user.otp = otp;
+        user.otpExpires = new Date(Date.now() + 10 * 60 * 1000);
+        await user.save();
+
+        if (process.env.NODE_ENV === "development") {
+          console.log(`[DEV] Resent OTP for ${email}: ${otp}`);
+        } else {
+          await sendOTPEmail(email, otp).catch((err) => console.error("Email error:", err));
+        }
+
+        return res.status(403).json({ 
+          message: "Please verify your email. A new code has been sent.",
+          needsVerification: true,
+          email: user.email
+        });
       }
 
       res.json({
@@ -125,7 +131,7 @@ const verifyOTP = async (req, res) => {
     user.isVerified = true;
     user.otp = undefined;
     user.otpExpires = undefined;
-    user.trustScore = (user.trustScore || 0) + TRUST_POINTS.EMAIL_VERIFIED;   // ← trust award
+    user.trustScore = (user.trustScore || 0) + TRUST_POINTS.EMAIL_VERIFIED;
     await user.save();
 
     res.status(200).json({

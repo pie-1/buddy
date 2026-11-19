@@ -1,4 +1,3 @@
-// client/src/pages/AuthPage.jsx
 import { useState, useContext, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence, useAnimationControls } from "framer-motion";
@@ -116,7 +115,16 @@ export default function AuthPage() {
     try {
       if (mode === "login") {
         const res = await login(email, formData.password);
-        if (!res.success) fail(res.message);
+        if (!res.success) {
+          if (res.needsVerification) {
+            setFormData((f) => ({ ...f, email, otp: "" }));
+            setMode("verify");
+            setError("Please check your email for the verification code.");
+            setLoading(false);
+            return;
+          }
+          fail(res.message);
+        }
       } else if (mode === "signup") {
         const res = await register({ 
           name: formData.name.trim(), 
@@ -130,7 +138,7 @@ export default function AuthPage() {
         if (res.success) {
           setFormData((f) => ({ ...f, email, otp: "" }));
           setMode("verify");
-          if (import.meta.env.DEV) setError("DEV MODE: Check your terminal for the OTP.");
+          if (import.meta.env.DEV) setError("Check your email for the OTP.");
         } else fail(res.message);
       } else {
         const res = await verifyOTP(email, formData.otp);
